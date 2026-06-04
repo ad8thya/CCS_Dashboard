@@ -1,23 +1,63 @@
-<h1 class="text-3xl font-bold text-gray-900 mb-6">Dashboard</h1>
+<div class="mb-6">
+  <h1 class="page-title">Dashboard</h1>
+  <p class="page-subtitle mt-1">
+    Competency and certificate overview — CMRL Competency Certificate System
+  </p>
+</div>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-  <div class="bg-white p-6 rounded-lg shadow">
-    <h3 class="text-sm font-medium text-gray-600">Total Employees</h3>
-    <p class="text-3xl font-bold text-gray-900 mt-2">245</p>
-  </div>
+<section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+  @for (card of kpiCards; track card.label) {
+    <article class="panel">
+      <div class="panel-body">
+        <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+          {{ card.label }}
+        </p>
+        <p class="kpi-value mt-2">{{ card.value }}</p>
+        <p class="text-xs text-gray-500 mt-2">{{ card.note }}</p>
+      </div>
+    </article>
+  }
+</section>
 
-  <div class="bg-white p-6 rounded-lg shadow">
-    <h3 class="text-sm font-medium text-gray-600">Active Certificates</h3>
-    <p class="text-3xl font-bold text-gray-900 mt-2">198</p>
-  </div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <section class="panel lg:col-span-2">
+    <div class="panel-header">Recent Activity</div>
+    <div class="panel-body p-0">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Activity</th>
+            <th>Reference</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of recentActivity; track item.reference) {
+            <tr>
+              <td class="whitespace-nowrap">{{ item.date }}</td>
+              <td>{{ item.description }}</td>
+              <td class="text-gray-600">{{ item.reference }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
 
-  <div class="bg-white p-6 rounded-lg shadow">
-    <h3 class="text-sm font-medium text-gray-600">Expiring Soon</h3>
-    <p class="text-3xl font-bold text-gray-900 mt-2">17</p>
-  </div>
-
-  <div class="bg-white p-6 rounded-lg shadow">
-    <h3 class="text-sm font-medium text-gray-600">Training Batches</h3>
-    <p class="text-3xl font-bold text-gray-900 mt-2">12</p>
-  </div>
+  <section class="panel">
+    <div class="panel-header">Quick Access</div>
+    <ul class="divide-y divide-gray-200">
+      @for (link of quickLinks; track link.route) {
+        <li>
+          <a
+            [routerLink]="link.route"
+            class="block px-4 py-3 hover:bg-gray-50 no-underline"
+          >
+            <span class="text-sm font-semibold text-blue-900">{{ link.label }}</span>
+            <span class="block text-xs text-gray-500 mt-0.5">{{ link.description }}</span>
+          </a>
+        </li>
+      }
+    </ul>
+  </section>
 </div>

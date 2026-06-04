@@ -1,3 +1,167 @@
-/* You can add global styles to this file, and also import other style files */
-
 @import 'tailwindcss';
+
+:root {
+  --cmrl-blue: #1e3a8a;
+  --cmrl-blue-dark: #172554;
+  --cmrl-border: #d1d5db;
+  --cmrl-surface: #f3f4f6;
+  --cmrl-text: #111827;
+  --cmrl-text-muted: #4b5563;
+}
+
+body {
+  font-family:
+    'Segoe UI',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  color: var(--cmrl-text);
+  background-color: var(--cmrl-surface);
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--cmrl-text);
+  letter-spacing: -0.01em;
+}
+
+.page-subtitle {
+  font-size: 0.875rem;
+  color: var(--cmrl-text-muted);
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid var(--cmrl-border);
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+}
+
+.panel-header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--cmrl-border);
+  background: #f9fafb;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--cmrl-text);
+}
+
+.panel-body {
+  padding: 1rem;
+}
+
+.kpi-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--cmrl-blue);
+  line-height: 1.2;
+}
+
+.report-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid var(--cmrl-border);
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.report-toolbar label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--cmrl-text-muted);
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.report-input {
+  border: 1px solid var(--cmrl-border);
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  min-width: 10rem;
+  background: #fff;
+}
+
+.report-input:focus {
+  outline: 2px solid #93c5fd;
+  outline-offset: 0;
+  border-color: var(--cmrl-blue);
+}
+
+.btn-primary {
+  background: var(--cmrl-blue);
+  color: #fff;
+  border: 1px solid var(--cmrl-blue-dark);
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: var(--cmrl-blue-dark);
+}
+
+.btn-secondary {
+  background: #fff;
+  color: var(--cmrl-text);
+  border: 1px solid var(--cmrl-border);
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: #f9fafb;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.data-table thead th {
+  background: #f3f4f6;
+  border: 1px solid var(--cmrl-border);
+  padding: 0.625rem 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--cmrl-text);
+  white-space: nowrap;
+}
+
+.data-table tbody td {
+  border: 1px solid var(--cmrl-border);
+  padding: 0.625rem 0.75rem;
+  color: var(--cmrl-text);
+}
+
+.data-table tbody tr:nth-child(even) {
+  background: #fafafa;
+}
+
+.data-table tbody tr:hover {
+  background: #f0f4ff;
+}
+
+.breadcrumb-link {
+  font-size: 0.8125rem;
+  color: var(--cmrl-blue);
+  text-decoration: none;
+}
+
+.breadcrumb-link:hover {
+  text-decoration: underline;
+}

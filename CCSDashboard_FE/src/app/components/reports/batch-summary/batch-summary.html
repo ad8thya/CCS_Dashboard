@@ -1,8 +1,93 @@
-<a routerLink="/reports" class="text-sm text-blue-900 hover:underline mb-4 inline-block">
-  &larr; Back to Reports
-</a>
+<nav class="mb-4 text-sm text-gray-500">
+  <a routerLink="/reports" class="breadcrumb-link">Reports</a>
+  <span class="mx-2">/</span>
+  <span>Batch Summary</span>
+</nav>
 
-<h1 class="text-3xl font-bold text-gray-900 mb-2">Batch Summary</h1>
-<p class="text-gray-600">
-  Report view will be connected to the API in a later step.
-</p>
+<div class="mb-4">
+  <h1 class="page-title">Batch Summary Report</h1>
+  <p class="page-subtitle mt-1">
+    Training batch completion and certification status.
+  </p>
+</div>
+
+<div class="report-toolbar">
+  <div>
+    <label for="bs-search">Search</label>
+    <input
+      id="bs-search"
+      type="text"
+      class="report-input"
+      placeholder="Batch code or course name"
+      [(ngModel)]="searchTerm"
+    />
+  </div>
+  <div>
+    <label for="bs-year">Year</label>
+    <select id="bs-year" class="report-input" [(ngModel)]="yearFilter">
+      @for (y of yearOptions; track y) {
+        <option [value]="y">{{ y }}</option>
+      }
+    </select>
+  </div>
+  <div class="flex gap-2 ml-auto items-end">
+    <button type="button" class="btn-secondary" disabled>Export Excel</button>
+    <button type="button" class="btn-primary" disabled>Export CSV</button>
+  </div>
+</div>
+
+@if (loading) {
+  <p class="text-sm text-gray-600 panel panel-body">Loading batch data…</p>
+} @else if (loadError) {
+  <p class="text-sm text-red-800 panel panel-body">{{ loadError }}</p>
+} @else {
+  <div class="panel">
+    <div class="panel-header flex justify-between items-center">
+      <span>Training Batches</span>
+      <span class="font-normal text-gray-500">{{ filteredRows.length }} row(s)</span>
+    </div>
+    <div class="panel-body p-0 overflow-x-auto">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Batch Code</th>
+            <th>Course Name</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Trainees</th>
+            <th>Active Certs</th>
+            <th>Expired Certs</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (filteredRows.length === 0) {
+            <tr>
+              <td colspan="7" class="text-center text-gray-500 py-6">
+                No records match the current filters.
+              </td>
+            </tr>
+          } @else {
+            @for (r of filteredRows; track r.batchCode) {
+              <tr>
+                <td>{{ r.batchCode }}</td>
+                <td>{{ r.courseName }}</td>
+                <td>{{ r.startDate | date:'dd MMM yyyy' }}</td>
+                <td>{{ r.endDate | date:'dd MMM yyyy' }}</td>
+                <td class="text-right">{{ r.totalParticipants }}</td>
+                <td class="text-right">
+                  <span class="text-green-700 font-medium">{{ r.activeCertificates }}</span>
+                </td>
+                <td class="text-right">
+                  <span [class.text-red-700]="r.expiredCertificates > 0"
+                        [class.font-medium]="r.expiredCertificates > 0">
+                    {{ r.expiredCertificates }}
+                  </span>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}

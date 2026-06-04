@@ -1,4 +1,5 @@
 using CCSDashboard.Data;
+using CCSDashboard.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -53,6 +54,8 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddOpenApi();
+builder.Services.AddScoped<IReportsService, ReportsService>();
+
 builder.Services.AddControllers();
 
 var app = builder.Build();

@@ -1,38 +1,38 @@
-<div>
-  <h1 class="text-3xl font-bold text-gray-900 mb-2">Reports</h1>
-  <p class="text-gray-600 mb-8">
-    Generate and view competency and certificate reports.
+<div class="mb-6">
+  <h1 class="page-title">Reports</h1>
+  <p class="page-subtitle mt-1">
+    Generate, filter, and export competency and certificate reports.
   </p>
+</div>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <a
-      routerLink="competency-register"
-      class="block bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow border border-transparent hover:border-blue-900"
-    >
-      <h2 class="text-lg font-semibold text-blue-900">Competency Register</h2>
-      <p class="text-sm text-gray-600 mt-2">
-        Employee competency records and register view.
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <a routerLink="competency-register" class="panel block no-underline hover:border-blue-900">
+    <div class="panel-header">Competency Register</div>
+    <div class="panel-body">
+      <p class="text-sm text-gray-600">
+        Employee competency records for departmental registers and audits.
       </p>
-    </a>
+      <p class="text-xs text-blue-900 font-semibold mt-3">Open report →</p>
+    </div>
+  </a>
 
-    <a
-      routerLink="active-certificates"
-      class="block bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow border border-transparent hover:border-blue-900"
-    >
-      <h2 class="text-lg font-semibold text-blue-900">Active Certificates</h2>
-      <p class="text-sm text-gray-600 mt-2">
-        Currently valid certificates across the organization.
+  <a routerLink="active-certificates" class="panel block no-underline hover:border-blue-900">
+    <div class="panel-header">Active Certificates</div>
+    <div class="panel-body">
+      <p class="text-sm text-gray-600">
+        List of certificates currently within validity period.
       </p>
-    </a>
+      <p class="text-xs text-blue-900 font-semibold mt-3">Open report →</p>
+    </div>
+  </a>
 
-    <a
-      routerLink="batch-summary"
-      class="block bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow border border-transparent hover:border-blue-900"
-    >
-      <h2 class="text-lg font-semibold text-blue-900">Batch Summary</h2>
-      <p class="text-sm text-gray-600 mt-2">
-        Training batch completion and certificate status.
+  <a routerLink="batch-summary" class="panel block no-underline hover:border-blue-900">
+    <div class="panel-header">Batch Summary</div>
+    <div class="panel-body">
+      <p class="text-sm text-gray-600">
+        Training batch completion and certification counts.
       </p>
-    </a>
-  </div>
+      <p class="text-xs text-blue-900 font-semibold mt-3">Open report →</p>
+    </div>
+  </a>
 </div>

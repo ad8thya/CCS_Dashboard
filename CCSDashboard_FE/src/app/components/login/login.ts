@@ -7,7 +7,7 @@ import { Router } from '@angular/router';
   selector: 'app-login',
   standalone: true,
   imports: [FormsModule],
-  templateUrl: './login.html'
+  templateUrl: './login.html',
 })
 export class LoginComponent {
   private router = inject(Router);
@@ -15,24 +15,19 @@ export class LoginComponent {
 
   username = '';
   password = '';
+  loginError = '';
 
   login() {
-    this.authService
-      .login(this.username, this.password)
-      .subscribe({
-        next: (response) => {
+    this.loginError = '';
 
-          localStorage.setItem(
-            'token',
-            response.token
-          );
-          this.router.navigate(['/dashboard']);
-
-          
-        },
-        error: (err) => {
-          console.error(err);
-        }
-      });
+    this.authService.login(this.username, this.password).subscribe({
+      next: (response) => {
+        this.authService.storeToken(response.token);
+        this.router.navigate(['/dashboard']);
+      },
+      error: () => {
+        this.loginError = 'Invalid username or password. Please try again.';
+      },
+    });
   }
 }

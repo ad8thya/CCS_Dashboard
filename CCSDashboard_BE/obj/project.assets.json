@@ -3191,11 +3191,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\adisi\\OneDrive\\Desktop\\CMRL\\dotnet-projects\\CCSDashboard\\CCSDashboard.csproj",
+      "projectUniqueName": "C:\\Users\\adisi\\OneDrive\\Desktop\\CMRL\\CCSDashboard\\CCSDashboard_BE\\CCSDashboard.csproj",
       "projectName": "CCSDashboard",
-      "projectPath": "C:\\Users\\adisi\\OneDrive\\Desktop\\CMRL\\dotnet-projects\\CCSDashboard\\CCSDashboard.csproj",
+      "projectPath": "C:\\Users\\adisi\\OneDrive\\Desktop\\CMRL\\CCSDashboard\\CCSDashboard_BE\\CCSDashboard.csproj",
       "packagesPath": "C:\\Users\\adisi\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\adisi\\OneDrive\\Desktop\\CMRL\\dotnet-projects\\CCSDashboard\\obj\\",
+      "outputPath": "C:\\Users\\adisi\\OneDrive\\Desktop\\CMRL\\CCSDashboard\\CCSDashboard_BE\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\adisi\\AppData\\Roaming\\NuGet\\NuGet.Config"

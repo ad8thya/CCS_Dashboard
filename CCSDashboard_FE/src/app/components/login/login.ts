@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -9,7 +10,7 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './login.html'
 })
 export class LoginComponent {
-
+  private router = inject(Router);
   private authService = inject(AuthService);
 
   username = '';
@@ -25,8 +26,9 @@ export class LoginComponent {
             'token',
             response.token
           );
+          this.router.navigate(['/dashboard']);
 
-          console.log('Logged In');
+          
         },
         error: (err) => {
           console.error(err);

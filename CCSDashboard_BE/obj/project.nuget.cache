@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "wi9ZNlxLCZo=",
+  "dgSpecHash": "uHueXOGKY3Y=",
   "success": true,
-  "projectFilePath": "C:\\Users\\adisi\\OneDrive\\Desktop\\CMRL\\dotnet-projects\\CCSDashboard\\CCSDashboard.csproj",
+  "projectFilePath": "C:\\Users\\adisi\\OneDrive\\Desktop\\CMRL\\CCSDashboard\\CCSDashboard_BE\\CCSDashboard.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\adisi\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\adisi\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\9.0.8\\microsoft.aspnetcore.authentication.jwtbearer.9.0.8.nupkg.sha512",

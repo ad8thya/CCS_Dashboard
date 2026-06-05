@@ -1,50 +1,89 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { MatTableModule } from '@angular/material/table';
+import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatSortModule, MatSort } from '@angular/material/sort';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTableDataSource } from '@angular/material/table';
 import { ReportService } from '../../../services/report.service';
 import { ActiveCertificateRecord } from '../../../models/active-certificate.model';
 
 @Component({
   selector: 'app-active-certificates',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    MatTableModule,
+    MatPaginatorModule,
+    MatSortModule,
+    MatInputModule,
+    MatFormFieldModule,
+    MatChipsModule,
+    MatProgressSpinnerModule,
+  ],
   templateUrl: './active-certificates.html',
+  styleUrl: './active-certificates.css',
 })
-export class ActiveCertificatesComponent implements OnInit {
+export class ActiveCertificatesComponent implements OnInit, AfterViewInit {
   private reportService = inject(ReportService);
 
-  rows: ActiveCertificateRecord[] = [];
-  searchTerm = '';
-  statusFilter = 'All';
+  displayedColumns = [
+    'certificateNumber',
+    'employeeCode',
+    'employeeName',
+    'department',
+    'competencyArea',
+    'issueDate',
+    'expiryDate',
+    'daysToExpiry',
+  ];
+
+  dataSource = new MatTableDataSource<ActiveCertificateRecord>([]);
   loading = true;
   loadError = '';
+
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
 
   ngOnInit(): void {
     this.reportService.getActiveCertificates().subscribe({
       next: (data) => {
-        this.rows = data;
+        this.dataSource.data = data;
         this.loading = false;
       },
       error: () => {
-        this.loadError =
-          'Unable to load active certificates. Ensure you are logged in and the API is running.';
+        this.loadError = 'Unable to load active certificates.';
         this.loading = false;
       },
     });
   }
 
-  get filteredRows(): ActiveCertificateRecord[] {
-    const term = this.searchTerm.trim().toLowerCase();
-    return this.rows.filter((r) => {
-      const matchesSearch =
-        !term ||
-        r.employeeCode.toLowerCase().includes(term) ||
-        r.employeeName.toLowerCase().includes(term) ||
-        r.certificateNumber.toLowerCase().includes(term);
+  ngAfterViewInit(): void {
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
+  }
 
-      // API only returns active certs, status filter is informational only
-      return matchesSearch;
-    });
+  applySearch(term: string): void {
+    this.dataSource.filter = term.trim().toLowerCase();
+    this.dataSource.paginator?.firstPage();
+  }
+
+  expiryClass(days: number): string {
+    if (days <= 30) return 'chip-red';
+    if (days <= 90) return 'chip-yellow';
+    return 'chip-green';
+  }
+
+  expiryLabel(days: number): string {
+    if (days <= 30) return `⚠ ${days}d left`;
+    if (days <= 90) return `${days}d left`;
+    return `✓ ${days}d left`;
   }
 }

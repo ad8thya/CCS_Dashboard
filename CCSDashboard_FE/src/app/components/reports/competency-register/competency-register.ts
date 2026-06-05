@@ -32,7 +32,7 @@ import { CompetencyRegisterRecord } from '../../../models/competency-register.mo
   styleUrl: './competency-register.css',
 })
 export class CompetencyRegisterComponent implements OnInit, AfterViewInit {
-  private reportService = inject(ReportService);
+  public reportService = inject(ReportService);
 
   displayedColumns = [
     'employeeCode',
@@ -48,16 +48,10 @@ export class CompetencyRegisterComponent implements OnInit, AfterViewInit {
   loadError = '';
   departmentFilter = 'All';
 
-  readonly departmentOptions = [
-    'All',
-    'Operations',
-    'Signalling',
-    'Track/P-Way',
-    'Telecom',
-    'Automatic Fare Collection',
-    'Rolling Stock',
-    'Electrical',
-  ];
+  get departmentOptions(): string[] {
+  const depts = this.dataSource.data.map(r => r.department).filter(Boolean);
+  return ['All', ...new Set(depts)].sort();
+}
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;

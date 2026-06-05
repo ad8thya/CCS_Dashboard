@@ -34,7 +34,9 @@
 
   <div class="flex gap-2 ml-auto items-center">
     <button type="button" class="btn-secondary" disabled>Export Excel</button>
-    <button type="button" class="btn-primary" disabled>Export CSV</button>
+    <button type="button" class="btn-primary" (click)="reportService.exportCompetencyRegister()">
+  Export CSV
+</button>
   </div>
 </div>
 

@@ -220,3 +220,62 @@ body {
 .mdc-text-field--outlined .mdc-notched-outline__trailing {
   border-color: #cbd5e1 !important;
 }
+
+/* ── Snackbar notifications ─────────────────────────────── */
+.snack-success .mdc-snackbar__surface {
+  background-color: #166534 !important;
+  color: #fff !important;
+}
+
+.snack-error .mdc-snackbar__surface {
+  background-color: #991b1b !important;
+  color: #fff !important;
+}
+
+.snack-info .mdc-snackbar__surface {
+  background-color: #1e3a8a !important;
+  color: #fff !important;
+}
+
+.mdc-snackbar__label {
+  color: #fff !important;
+  font-size: 0.875rem !important;
+}
+
+.mdc-snackbar .mat-mdc-button {
+  color: #fff !important;
+  font-weight: 600 !important;
+}
+
+/* ── Login form error state ─────────────────────────────── */
+.login-error {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  color: #b91c1c;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ── Report error banner ────────────────────────────────── */
+.report-error {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
+  font-size: 0.875rem;
+  color: #b91c1c;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* ── Button loading state ───────────────────────────────── */
+.btn-primary:disabled,
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

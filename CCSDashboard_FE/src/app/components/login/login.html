@@ -1,91 +1,63 @@
 <nav class="h-20 bg-blue-900 shadow-md flex items-center px-8">
-
-<img
- src="/images.jpeg"
- alt="CMRL Logo"
- class="h-12 w-auto">
-
+  <img src="/images.jpeg" alt="CMRL Logo" class="h-12 w-auto">
   <div class="ml-4">
-    <h1 class="text-white text-xl font-semibold">
-      Chennai Metro Rail Limited
-    </h1>
+    <h1 class="text-white text-xl font-semibold">Chennai Metro Rail Limited</h1>
   </div>
-
 </nav>
 
 <div class="relative h-[calc(100vh-80px)]">
-
-<img
- src="/cmrl2.png"
- alt="Metro"
- class="absolute inset-0 w-full h-full object-cover">
-
+  <img src="/cmrl2.png" alt="Metro" class="absolute inset-0 w-full h-full object-cover">
   <div class="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent"></div>
 
   <div class="absolute right-12 top-1/2 -translate-y-1/2">
+    <div class="w-[420px] h-fit bg-white shadow-2xl rounded-xl p-10">
 
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-blue-900">CMRL</h1>
+        <h2 class="text-xl font-semibold mt-2 text-gray-800">Competency Certificate System</h2>
+        <p class="text-sm text-gray-500 mt-2">Chennai Metro Rail Limited</p>
+      </div>
 
-<div class="w-[420px] h-fit bg-white shadow-2xl rounded-xl p-10">
+      <div class="space-y-4">
 
-  <div class="text-center mb-8">
-
-    <h1 class="text-3xl font-bold text-blue-900">
-      CMRL
-    </h1>
-
-    <h2 class="text-xl font-semibold mt-2 text-gray-800">
-      Competency Certificate System
-    </h2>
-
-    <p class="text-sm text-gray-500 mt-2">
-      Chennai Metro Rail Limited
-    </p>
-
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+    <input type="text" [(ngModel)]="username" (keydown.enter)="login()"
+      placeholder="Enter username" [disabled]="loading"
+      class="w-full border border-gray-300 rounded-lg px-4 py-2" />
   </div>
 
-  <div class="space-y-4">
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+    <input type="password" [(ngModel)]="password" (keydown.enter)="login()"
+      placeholder="Enter password" [disabled]="loading"
+      class="w-full border border-gray-300 rounded-lg px-4 py-2" />
+  </div>
 
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">
-        Username
-      </label>
-
-      <input
-        type="text"
-        [(ngModel)]="username"
-        placeholder="Enter username"
-        class="w-full border border-gray-300 rounded-lg px-4 py-2">
+  @if (loginError) {
+    <div class="login-error">
+      <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+      </svg>
+      {{ loginError }}
     </div>
+  }
 
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">
-        Password
-      </label>
-
-      <input
-        type="password"
-        [(ngModel)]="password"
-        placeholder="Enter password"
-        class="w-full border border-gray-300 rounded-lg px-4 py-2">
-    </div>
-
-    @if (loginError) {
-      <p class="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-        {{ loginError }}
-      </p>
-    }
-
-    <button
-      (click)="login()"
-      class="w-full bg-blue-900 text-white py-2 rounded-lg">
+  <button (click)="login()" [disabled]="loading"
+    class="w-full bg-blue-900 text-white py-2 rounded-lg font-semibold flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
+    @if (loading) {
+      <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+      </svg>
+      Signing in…
+    } @else {
       Sign In
-    </button>
-
-  </div>
+    }
+  </button>
 
 </div>
-
-
+    </div>
   </div>
-
 </div>

@@ -3,53 +3,75 @@ import { HttpClient } from '@angular/common/http';
 import { CompetencyRegisterRecord } from '../models/competency-register.model';
 import { ActiveCertificateRecord } from '../models/active-certificate.model';
 import { BatchSummaryRecord } from '../models/batch-summary.model';
+import { NotificationService } from './notification.service';
+import { environment } from '../../environments/environment';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class ReportService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:5266/api';
+  private notify = inject(NotificationService);
+  private baseUrl = environment.apiBaseUrl;
 
   getCompetencyRegister() {
     return this.http.get<CompetencyRegisterRecord[]>(
-      `${this.baseUrl}/reports/competency-register`,
+      `${this.baseUrl}/reports/competency-register`
     );
   }
 
   getActiveCertificates() {
     return this.http.get<ActiveCertificateRecord[]>(
-      `${this.baseUrl}/reports/active-certificates`,
+      `${this.baseUrl}/reports/active-certificates`
     );
   }
 
   getBatchSummary() {
     return this.http.get<BatchSummaryRecord[]>(
-      `${this.baseUrl}/reports/batch-summary`,
+      `${this.baseUrl}/reports/batch-summary`
     );
   }
 
   exportCompetencyRegister(): void {
+    this.notify.info('Preparing download…');
     this.http.get(`${this.baseUrl}/reports/competency-register/export`, {
       responseType: 'blob',
-    }).subscribe(blob => {
-      this.triggerDownload(blob, `competency-register-${this.today()}.csv`);
+    }).subscribe({
+      next: (blob) => {
+        this.triggerDownload(blob, `competency-register-${this.today()}.csv`);
+        this.notify.success('Competency Register exported successfully.');
+      },
+      error: () => {
+        this.notify.error('Export failed. Please try again.');
+      },
     });
   }
 
   exportActiveCertificates(): void {
+    this.notify.info('Preparing download…');
     this.http.get(`${this.baseUrl}/reports/active-certificates/export`, {
       responseType: 'blob',
-    }).subscribe(blob => {
-      this.triggerDownload(blob, `active-certificates-${this.today()}.csv`);
+    }).subscribe({
+      next: (blob) => {
+        this.triggerDownload(blob, `active-certificates-${this.today()}.csv`);
+        this.notify.success('Active Certificates exported successfully.');
+      },
+      error: () => {
+        this.notify.error('Export failed. Please try again.');
+      },
     });
   }
 
   exportBatchSummary(): void {
+    this.notify.info('Preparing download…');
     this.http.get(`${this.baseUrl}/reports/batch-summary/export`, {
       responseType: 'blob',
-    }).subscribe(blob => {
-      this.triggerDownload(blob, `batch-summary-${this.today()}.csv`);
+    }).subscribe({
+      next: (blob) => {
+        this.triggerDownload(blob, `batch-summary-${this.today()}.csv`);
+        this.notify.success('Batch Summary exported successfully.');
+      },
+      error: () => {
+        this.notify.error('Export failed. Please try again.');
+      },
     });
   }
 

@@ -32,7 +32,7 @@ import { BatchSummaryRecord } from '../../../models/batch-summary.model';
   styleUrl: './batch-summary.css',
 })
 export class BatchSummaryComponent implements OnInit, AfterViewInit {
-  private reportService = inject(ReportService);
+  public reportService = inject(ReportService);
 
   displayedColumns = [
     'batchCode',

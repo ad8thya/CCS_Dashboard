@@ -32,7 +32,7 @@ import { ActiveCertificateRecord } from '../../../models/active-certificate.mode
   styleUrl: './active-certificates.css',
 })
 export class ActiveCertificatesComponent implements OnInit, AfterViewInit {
-  private reportService = inject(ReportService);
+  public reportService = inject(ReportService);
 
   displayedColumns = [
     'certificateNumber',
@@ -85,5 +85,9 @@ export class ActiveCertificatesComponent implements OnInit, AfterViewInit {
     if (days <= 30) return `⚠ ${days}d left`;
     if (days <= 90) return `${days}d left`;
     return `✓ ${days}d left`;
+  }
+
+  exportCsv(): void {
+  this.reportService.exportActiveCertificates();
   }
 }

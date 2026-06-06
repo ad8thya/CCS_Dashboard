@@ -2,14 +2,13 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
-import { environment } from '../../environments/environment';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const token = localStorage.getItem('token');
-  const loginUrl = `${environment.apiBaseUrl}/auth/login`;
+  const isLoginRequest = req.url.includes('/auth/login');
 
-  if (token && !req.url.startsWith(loginUrl)) {
+  if (token && !isLoginRequest) {
     req = req.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`,
@@ -19,7 +18,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401 && !req.url.startsWith(loginUrl)) {
+      // Only redirect to login on 401 for non-login requests
+      // For login requests, let the error pass through to the component
+      if (error.status === 401 && !isLoginRequest) {
         localStorage.removeItem('token');
         router.navigate(['/login']);
       }

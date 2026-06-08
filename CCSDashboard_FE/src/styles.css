@@ -18,7 +18,6 @@ body {
     BlinkMacSystemFont,
     sans-serif;
   color: var(--cmrl-text);
-  background-color: var(--cmrl-surface);
 }
 
 .page-title {

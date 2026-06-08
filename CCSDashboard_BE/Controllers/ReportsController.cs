@@ -110,6 +110,9 @@ public async Task<IActionResult> GetSummary()
     {
         TotalEmployees      = await _context.Employees.CountAsync(),
         TotalCertificates   = await _context.Certificates.CountAsync(),
+        TotalDepartments  = await _context.Departments.CountAsync(d => d.IsActive),
+        TotalDesignations = await _context.Designations.CountAsync(d => d.IsActive),
+        TotalContractors = await _context.Contractors.CountAsync(c => c.IsActive),
         ActiveCertificates  = await _context.Certificates
                                 .CountAsync(c => c.Status == "Active" && c.ExpiryDate >= today),
         ExpiringIn7Days     = await _context.Certificates
@@ -140,10 +143,11 @@ public async Task<IActionResult> GetSummary()
 public async Task<IActionResult> GetDepartmentDistribution()
 {
     var groups = await _context.Employees
-        .GroupBy(e => e.Department)
-        .Select(g => new { Department = g.Key, Count = g.Count() })
-        .OrderByDescending(g => g.Count)
-        .ToListAsync();
+    .Include(e => e.Department)
+    .GroupBy(e => e.Department.Name)          // was e.Department
+    .Select(g => new { Department = g.Key, Count = g.Count() })
+    .OrderByDescending(g => g.Count)
+    .ToListAsync();
 
     var total = groups.Sum(g => g.Count);
 

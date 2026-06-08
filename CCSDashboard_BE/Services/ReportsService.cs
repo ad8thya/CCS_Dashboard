@@ -18,14 +18,17 @@ namespace CCSDashboard.Services
             return await _context.Certificates
                 .Include(c => c.Employee)
                 .Include(c => c.Batch)
+                .Include(c => c.Employee).ThenInclude(e => e.Department)
+                .Include(c => c.Employee).ThenInclude(e => e.Designation)
+                .Include(c => c.Batch)
                 .OrderBy(c => c.Employee.Department)
                 .ThenBy(c => c.Employee.Name)
                 .Select(c => new CompetencyRegisterDto
                 {
                     EmployeeCode    = c.Employee.EmployeeCode,
                     EmployeeName    = c.Employee.Name,
-                    Department      = c.Employee.Department,
-                    Designation     = c.Employee.Designation,
+                    Department      = c.Employee.Department.Name,
+                    Designation     = c.Employee.Designation.Name,
                     CompetencyArea  = c.CompetencyArea,
                     CertificateNumber = c.CertificateNumber,
                     IssueDate       = c.IssueDate,
@@ -43,6 +46,7 @@ namespace CCSDashboard.Services
 
             return await _context.Certificates
                 .Include(c => c.Employee)
+                .Include(c => c.Employee).ThenInclude(e => e.Department)
                 .Where(c => c.Status == "Active" && c.ExpiryDate >= today)
                 .OrderBy(c => c.ExpiryDate)
                 .Select(c => new ActiveCertificateDto
@@ -50,7 +54,7 @@ namespace CCSDashboard.Services
                     CertificateNumber = c.CertificateNumber,
                     EmployeeCode      = c.Employee.EmployeeCode,
                     EmployeeName      = c.Employee.Name,
-                    Department        = c.Employee.Department,
+                    Department        = c.Employee.Department.Name,
                     CompetencyArea    = c.CompetencyArea,
                     IssueDate         = c.IssueDate,
                     ExpiryDate        = c.ExpiryDate,

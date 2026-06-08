@@ -66,6 +66,8 @@ private formatLastLogin(raw: string | null): string {
     expiringIn90Days:    0,
     expiredCertificates: 0,
     totalBatches:        0,
+     expiringIn7Days:  0,
+  expiringIn15Days: 0,
   };
 
   get compliancePct(): number {
@@ -109,16 +111,19 @@ private formatLastLogin(raw: string | null): string {
       summary:      this.http.get<any>(`${this.baseUrl}/reports/summary`),
       departments:  this.http.get<DeptRow[]>(`${this.baseUrl}/reports/department-distribution`),
       activity:     this.http.get<ActivityApiItem[]>(`${this.baseUrl}/reports/recent-activity`),
+      
     }).subscribe({
       next: ({ summary, departments, activity }) => {
         this.summary.totalEmployees      = summary.totalEmployees;
         this.summary.totalCertificates   = summary.totalCertificates;
         this.summary.activeCertificates  = summary.activeCertificates;
+        this.summary.expiringIn7Days  = summary.expiringIn7Days;
+        this.summary.expiringIn15Days = summary.expiringIn15Days;
         this.summary.expiringIn30Days    = summary.expiringIn30Days;
         this.summary.expiringIn90Days    = summary.expiringIn90Days;
         this.summary.expiredCertificates = summary.expiredCertificates;
         this.summary.totalBatches        = summary.totalBatches;
-
+        
         this.departments = departments;
         this.recentActivity = activity.map(a => this.mapActivity(a));
         this.loading = false;

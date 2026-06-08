@@ -102,31 +102,39 @@ public async Task<IActionResult> ExportBatchSummary()
 }
 
     [HttpGet("summary")]
-        public async Task<IActionResult> GetSummary()
-        {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+public async Task<IActionResult> GetSummary()
+{
+    var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
-            var summary = new
-            {
-                TotalEmployees      = await _context.Employees.CountAsync(),
-                TotalCertificates   = await _context.Certificates.CountAsync(),
-                ActiveCertificates  = await _context.Certificates
-                                        .CountAsync(c => c.Status == "Active" && c.ExpiryDate >= today),
-                ExpiringIn30Days    = await _context.Certificates
-                                        .CountAsync(c => c.Status == "Active"
-                                            && c.ExpiryDate >= today
-                                            && c.ExpiryDate <= today.AddDays(30)),
-                ExpiringIn90Days    = await _context.Certificates
-                                        .CountAsync(c => c.Status == "Active"
-                                            && c.ExpiryDate >= today
-                                            && c.ExpiryDate <= today.AddDays(90)),
-                ExpiredCertificates = await _context.Certificates
-                                        .CountAsync(c => c.ExpiryDate < today),
-                TotalBatches        = await _context.Batches.CountAsync(),
-            };
+    var summary = new
+    {
+        TotalEmployees      = await _context.Employees.CountAsync(),
+        TotalCertificates   = await _context.Certificates.CountAsync(),
+        ActiveCertificates  = await _context.Certificates
+                                .CountAsync(c => c.Status == "Active" && c.ExpiryDate >= today),
+        ExpiringIn7Days     = await _context.Certificates
+                                .CountAsync(c => c.Status == "Active"
+                                    && c.ExpiryDate >= today
+                                    && c.ExpiryDate <= today.AddDays(7)),
+        ExpiringIn15Days    = await _context.Certificates
+                                .CountAsync(c => c.Status == "Active"
+                                    && c.ExpiryDate >= today
+                                    && c.ExpiryDate <= today.AddDays(15)),
+        ExpiringIn30Days    = await _context.Certificates
+                                .CountAsync(c => c.Status == "Active"
+                                    && c.ExpiryDate >= today
+                                    && c.ExpiryDate <= today.AddDays(30)),
+        ExpiringIn90Days    = await _context.Certificates
+                                .CountAsync(c => c.Status == "Active"
+                                    && c.ExpiryDate >= today
+                                    && c.ExpiryDate <= today.AddDays(90)),
+        ExpiredCertificates = await _context.Certificates
+                                .CountAsync(c => c.ExpiryDate < today),
+        TotalBatches        = await _context.Batches.CountAsync(),
+    };
 
-            return Ok(summary);
-        }
+    return Ok(summary);
+}
 
         [HttpGet("department-distribution")]
 public async Task<IActionResult> GetDepartmentDistribution()
@@ -212,7 +220,11 @@ public async Task<IActionResult> GetRecentActivity()
         .Take(6)
         .Select((a, i) => a));
 }
+
+
     }
+
+    
 
     
 }

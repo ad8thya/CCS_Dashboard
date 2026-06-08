@@ -5,11 +5,15 @@ import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth.service';
-
+import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 interface ActivityItem {
-  icon: string;
+  matIcon: string;
   iconColor: string;
+  iconBg: string;
   message: string;
   time: string;
 }
@@ -29,7 +33,14 @@ interface ActivityApiItem {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [
+    CommonModule,
+    RouterLink,
+    MatIconModule,
+    MatCardModule,
+    MatChipsModule,
+    MatProgressSpinnerModule
+  ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
@@ -59,16 +70,20 @@ private formatLastLogin(raw: string | null): string {
 }
 
   summary = {
-    totalEmployees:      0,
-    totalCertificates:   0,
-    activeCertificates:  0,
-    expiringIn30Days:    0,
-    expiringIn90Days:    0,
-    expiredCertificates: 0,
-    totalBatches:        0,
-     expiringIn7Days:  0,
+  totalEmployees: 0,
+  totalCertificates: 0,
+  activeCertificates: 0,
+  expiringIn30Days: 0,
+  expiringIn90Days: 0,
+  expiredCertificates: 0,
+  totalBatches: 0,
+  expiringIn7Days: 0,
   expiringIn15Days: 0,
-  };
+
+  totalDepartments: 0,
+  totalDesignations: 0,
+  totalContractors: 0,
+};
 
   get compliancePct(): number {
     if (!this.summary.totalCertificates) return 0;
@@ -135,33 +150,17 @@ private formatLastLogin(raw: string | null): string {
   }
 
   private mapActivity(a: ActivityApiItem): ActivityItem {
-    const dateLabel = this.formatActivityDate(a.date);
-
-    switch (a.type) {
-      case 'batch_completed':
-        return {
-          icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-          iconColor: 'text-green-600',
-          message: a.message,
-          time: dateLabel,
-        };
-      case 'expiry_alert':
-        return {
-          icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
-          iconColor: 'text-amber-500',
-          message: a.message,
-          time: dateLabel,
-        };
-      case 'certificate_issued':
-      default:
-        return {
-          icon: 'M5 13l4 4L19 7',
-          iconColor: 'text-green-600',
-          message: a.message,
-          time: dateLabel,
-        };
-    }
+  const dateLabel = this.formatActivityDate(a.date);
+  switch (a.type) {
+    case 'batch_completed':
+      return { matIcon: 'check_circle', iconColor: '#15803d', iconBg: '#dcfce7', message: a.message, time: dateLabel };
+    case 'expiry_alert':
+      return { matIcon: 'warning', iconColor: '#b45309', iconBg: '#fef3c7', message: a.message, time: dateLabel };
+    case 'certificate_issued':
+    default:
+      return { matIcon: 'workspace_premium', iconColor: '#1d4ed8', iconBg: '#dbeafe', message: a.message, time: dateLabel };
   }
+}
 
   private formatActivityDate(dateStr: string): string {
     const date = new Date(dateStr);

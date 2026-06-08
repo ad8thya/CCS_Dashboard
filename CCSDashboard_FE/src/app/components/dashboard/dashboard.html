@@ -1,489 +1,419 @@
 <div class="dash-wrap">
 
-  <!-- Page title bar -->
-  <div class="dash-titlebar">
+  @if (loading) {
+    <div class="dash-loading">
+      <mat-spinner diameter="20" />
+      Loading dashboard…
+    </div>
+  } @else {
+
+  <!-- ── Header ──────────────────────────────────────────── -->
+  <div class="dash-header">
     <div>
       <h1 class="dash-title">Dashboard</h1>
       <p class="dash-date">{{ today }}</p>
     </div>
-    <div class="last-login">
-      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-      </svg>
+    <div class="last-login-chip">
+      <mat-icon style="font-size:13px;width:13px;height:13px;color:#94a3b8">schedule</mat-icon>
       Last login: {{ lastLogin }}
     </div>
   </div>
 
-  @if (loading) {
-    <div class="dash-loading">
-      <div class="dash-spinner"></div>
-      Loading dashboard data…
+  <!-- ── Metric strip ────────────────────────────────────── -->
+  <div class="metric-strip">
+    <div class="metric-cell">
+      <div class="metric-accent" style="background:#1d4ed8"></div>
+      <div class="metric-value" style="color:#1d4ed8">{{ summary.totalEmployees }}</div>
+      <div class="metric-label">Employees</div>
     </div>
-  } @else {
-
-  <!-- ── KPI Strip ───────────────────────────────────────── -->
-  <div class="kpi-strip">
-    <div class="kpi-badge">
-      <span class="kpi-badge-label">Employees</span>
-      <span class="kpi-badge-value blue">{{ summary.totalEmployees }}</span>
+    <div class="metric-cell">
+      <div class="metric-accent" style="background:#15803d"></div>
+      <div class="metric-value" style="color:#15803d">{{ summary.totalCertificates }}</div>
+      <div class="metric-label">Certificates</div>
     </div>
-    <div class="kpi-strip-div"></div>
-    <div class="kpi-badge">
-      <span class="kpi-badge-label">Certificates</span>
-      <span class="kpi-badge-value green">{{ summary.totalCertificates }}</span>
+    <div class="metric-cell">
+      <div class="metric-accent" style="background:#4338ca"></div>
+      <div class="metric-value" style="color:#4338ca">{{ summary.totalBatches }}</div>
+      <div class="metric-label">Batches</div>
     </div>
-    <div class="kpi-strip-div"></div>
-    <div class="kpi-badge">
-      <span class="kpi-badge-label">Batches</span>
-      <span class="kpi-badge-value indigo">{{ summary.totalBatches }}</span>
+    <div class="metric-cell">
+      <div class="metric-accent" style="background:#15803d"></div>
+      <div class="metric-value" style="color:#15803d">{{ summary.activeCertificates }}</div>
+      <div class="metric-label">Active</div>
     </div>
-    <div class="kpi-strip-div"></div>
-    <div class="kpi-badge">
-      <span class="kpi-badge-label">Active Certificates</span>
-      <span class="kpi-badge-value green">{{ summary.activeCertificates }}</span>
-    </div>
-    <div class="kpi-strip-div"></div>
-    <div class="kpi-badge">
-      <span class="kpi-badge-label">Expired</span>
-      <span class="kpi-badge-value"
-            [class.red]="summary.expiredCertificates > 0"
-            [class.muted]="summary.expiredCertificates === 0">
+    <div class="metric-cell">
+      <div class="metric-accent"
+           [style.background]="summary.expiredCertificates > 0 ? '#dc2626' : '#cbd5e1'"></div>
+      <div class="metric-value"
+           [style.color]="summary.expiredCertificates > 0 ? '#b91c1c' : '#94a3b8'">
         {{ summary.expiredCertificates }}
-      </span>
+      </div>
+      <div class="metric-label">Expired</div>
     </div>
-    <div class="kpi-strip-div"></div>
-    <div class="kpi-badge">
-      <span class="kpi-badge-label">Expiring (30d)</span>
-      <span class="kpi-badge-value"
-            [class.amber]="summary.expiringIn30Days > 0"
-            [class.muted]="summary.expiringIn30Days === 0">
+    <div class="metric-cell">
+      <div class="metric-accent"
+           [style.background]="summary.expiringIn30Days > 0 ? '#d97706' : '#cbd5e1'"></div>
+      <div class="metric-value"
+           [style.color]="summary.expiringIn30Days > 0 ? '#b45309' : '#94a3b8'">
         {{ summary.expiringIn30Days }}
-      </span>
+      </div>
+      <div class="metric-label">Expiring (30d)</div>
     </div>
   </div>
 
-  <!-- ── Row 1: Certificate Status + Operational Overview ── -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+  <!-- ── Master Data strip ───────────────────────────────── -->
+  <div class="master-strip">
 
-    <!-- Certificate Status -->
-    <div class="dash-card">
-      <div class="card-header">
-        <svg class="card-header-icon" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M9 12l2 2 4-4M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2M9 4a2 2 0 012-2h2a2 2 0 012 2"/>
-        </svg>
-        <span>Certificate Status</span>
+    <mat-card class="master-card dash-card" appearance="outlined">
+      <div class="master-card-accent" style="background:#4338ca"></div>
+      <div class="master-icon-wrap" style="background:#e0e7ff">
+        <mat-icon style="color:#4338ca">domain</mat-icon>
       </div>
-      <div class="card-body">
+      <div>
+        <div class="master-value">{{ summary.totalDepartments }}</div>
+        <div class="master-label">Departments</div>
+      </div>
+    </mat-card>
+
+    <mat-card class="master-card dash-card" appearance="outlined">
+      <div class="master-card-accent" style="background:#0891b2"></div>
+      <div class="master-icon-wrap" style="background:#cffafe">
+        <mat-icon style="color:#0891b2">badge</mat-icon>
+      </div>
+      <div>
+        <div class="master-value">{{ summary.totalDesignations }}</div>
+        <div class="master-label">Designations</div>
+      </div>
+    </mat-card>
+
+    <mat-card class="master-card dash-card" appearance="outlined">
+      <div class="master-card-accent" style="background:#d97706"></div>
+      <div class="master-icon-wrap" style="background:#fef3c7">
+        <mat-icon style="color:#d97706">handshake</mat-icon>
+      </div>
+      <div>
+        <div class="master-value">{{ summary.totalContractors }}</div>
+        <div class="master-label">Contractors</div>
+      </div>
+    </mat-card>
+
+  </div>
+
+  <!-- ── Row 1: Cert Status + Operational Overview ───────── -->
+  <div class="grid-2">
+
+    <mat-card class="dash-card" appearance="outlined">
+      <mat-card-header>
+        <div class="card-hd-dot" style="background:#1d4ed8"></div>
+        <span class="card-title-text">Certificate Status</span>
+      </mat-card-header>
+      <mat-card-content>
         <div class="stat-grid">
-
-          <div class="stat-item">
-            <span class="stat-value text-blue-700">{{ summary.totalCertificates }}</span>
-            <span class="stat-label">Total Issued</span>
+          <div class="stat-cell">
+            <div class="stat-num" style="color:#1d4ed8">{{ summary.totalCertificates }}</div>
+            <div class="stat-lbl">Total Issued</div>
           </div>
-
-          <div class="stat-item">
-            <span class="stat-value text-green-700">{{ summary.activeCertificates }}</span>
-            <span class="stat-label">Active</span>
+          <div class="stat-cell">
+            <div class="stat-num" style="color:#15803d">{{ summary.activeCertificates }}</div>
+            <div class="stat-lbl">Active</div>
           </div>
+          <div class="stat-cell">
+            <div class="stat-num"
+                 [style.color]="summary.expiringIn30Days > 0 ? '#b45309' : '#94a3b8'">
+              {{ summary.expiringIn30Days }}
+            </div>
+            <div class="stat-lbl">Expiring 30d</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-num"
+                 [style.color]="summary.expiredCertificates > 0 ? '#b91c1c' : '#94a3b8'">
+              {{ summary.expiredCertificates }}
+            </div>
+            <div class="stat-lbl">Expired</div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
 
-          <div class="stat-item">
-            <span class="stat-value"
-                  [class.text-amber-600]="summary.expiringIn30Days > 0"
-                  [class.text-gray-400]="summary.expiringIn30Days === 0">
+    <mat-card class="dash-card" appearance="outlined">
+      <mat-card-header>
+        <div class="card-hd-dot" style="background:#4338ca"></div>
+        <span class="card-title-text">Operational Overview</span>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="op-list">
+          <div class="op-row">
+            <span class="op-key">Registered Employees</span>
+            <span class="op-val">{{ summary.totalEmployees }}</span>
+          </div>
+          <div class="op-row">
+            <span class="op-key">Active Certificates</span>
+            <span class="op-val" style="color:#15803d">{{ summary.activeCertificates }}</span>
+          </div>
+          <div class="op-row">
+            <span class="op-key">Training Batches</span>
+            <span class="op-val">{{ summary.totalBatches }}</span>
+          </div>
+          <div class="op-row">
+            <span class="op-key">Expiring (30 Days)</span>
+            <span class="op-val"
+                  [style.color]="summary.expiringIn30Days > 0 ? '#b45309' : '#94a3b8'">
               {{ summary.expiringIn30Days }}
             </span>
-            <span class="stat-label">Expiring (30d)</span>
           </div>
-
-          <div class="stat-item">
-            <span class="stat-value"
-                  [class.text-red-600]="summary.expiredCertificates > 0"
-                  [class.text-gray-400]="summary.expiredCertificates === 0">
+          <div class="op-row">
+            <span class="op-key">Expired Certificates</span>
+            <span class="op-val"
+                  [style.color]="summary.expiredCertificates > 0 ? '#b91c1c' : '#94a3b8'">
               {{ summary.expiredCertificates }}
             </span>
-            <span class="stat-label">Expired</span>
           </div>
-
         </div>
-      </div>
-    </div>
-
-    <!-- Operational Overview -->
-    <div class="dash-card">
-      <div class="card-header">
-        <svg class="card-header-icon" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-        </svg>
-        <span>Operational Overview</span>
-      </div>
-      <div class="card-body">
-        <div class="op-row">
-          <span class="op-label">Registered Employees</span>
-          <span class="op-value">{{ summary.totalEmployees }}</span>
-        </div>
-        <div class="op-row">
-          <span class="op-label">Active Certificates</span>
-          <span class="op-value text-green-700">{{ summary.activeCertificates }}</span>
-        </div>
-        <div class="op-row">
-          <span class="op-label">Training Batches</span>
-          <span class="op-value">{{ summary.totalBatches }}</span>
-        </div>
-        <div class="op-row">
-          <span class="op-label">Certificates Expiring (30d)</span>
-          <span class="op-value"
-                [class.text-amber-600]="summary.expiringIn30Days > 0"
-                [class.text-gray-400]="summary.expiringIn30Days === 0">
-            {{ summary.expiringIn30Days }}
-          </span>
-        </div>
-        <div class="op-row">
-          <span class="op-label">Expired Certificates</span>
-          <span class="op-value"
-                [class.text-red-600]="summary.expiredCertificates > 0"
-                [class.text-gray-400]="summary.expiredCertificates === 0">
-            {{ summary.expiredCertificates }}
-          </span>
-        </div>
-      </div>
-    </div>
+      </mat-card-content>
+    </mat-card>
 
   </div>
 
-  <!-- ── Row 2: Expiry Alerts + Compliance Health ───────── -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+  <!-- ── Row 2: Expiry Alerts + Compliance ───────────────── -->
+  <div class="grid-2">
 
-    <!-- Expiry Alerts -->
-    <div class="dash-card">
-      <div class="card-header">
-        <svg class="card-header-icon text-amber-500" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-        </svg>
-        <span>Upcoming Expiry Alerts</span>
-      </div>
-      <div class="card-body space-y-3">
+    <mat-card class="dash-card" appearance="outlined">
+      <mat-card-header>
+        <div class="card-hd-dot" style="background:#d97706"></div>
+        <span class="card-title-text">Upcoming Expiry Alerts</span>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="alert-list">
 
-        <div class="alert-row alert-green">
-          <div class="alert-left">
-            <span class="alert-dot green"></span>
-            <span class="alert-label">Within 7 Days</span>
+          <div class="alert-row green">
+            <div class="alert-left">
+              <span class="alert-dot green"></span>Within 7 Days
+            </div>
+            <mat-chip class="chip-green" disableRipple>{{ summary.expiringIn7Days }}</mat-chip>
           </div>
-          <span class="alert-badge green">{{ summary.expiringIn7Days }}</span>
-        </div>
 
-        <div class="alert-row alert-amber">
-          <div class="alert-left">
-            <span class="alert-dot amber"></span>
-            <span class="alert-label">Within 15 Days</span>
+          <div class="alert-row amber">
+            <div class="alert-left">
+              <span class="alert-dot amber"></span>Within 15 Days
+            </div>
+            <mat-chip class="chip-amber" disableRipple>{{ summary.expiringIn15Days }}</mat-chip>
           </div>
-          <span class="alert-badge amber">{{ summary.expiringIn15Days }}</span>
-        </div>
 
-        <div class="alert-row alert-red">
-          <div class="alert-left">
-            <span class="alert-dot red"></span>
-            <span class="alert-label">Within 30 Days</span>
+          <div class="alert-row red">
+            <div class="alert-left">
+              <span class="alert-dot red"></span>Within 30 Days
+            </div>
+            <mat-chip class="chip-red" disableRipple>{{ summary.expiringIn30Days }}</mat-chip>
           </div>
-          <span class="alert-badge red">{{ summary.expiringIn30Days }}</span>
-        </div>
 
-        <div class="alert-row alert-blue">
-          <div class="alert-left">
-            <span class="alert-dot blue"></span>
-            <span class="alert-label">Within 90 Days</span>
+          <div class="alert-row blue">
+            <div class="alert-left">
+              <span class="alert-dot blue"></span>Within 90 Days
+            </div>
+            <mat-chip class="chip-blue" disableRipple>{{ summary.expiringIn90Days }}</mat-chip>
           </div>
-          <span class="alert-badge blue">{{ summary.expiringIn90Days }}</span>
+
+          @if (summary.expiringIn90Days === 0) {
+            <p class="all-clear">✓ No certificates expiring in the next 90 days.</p>
+          }
+
         </div>
+      </mat-card-content>
+    </mat-card>
 
-        @if (summary.expiringIn30Days === 0 && summary.expiringIn90Days === 0) {
-          <p class="text-xs text-green-700 bg-green-50 border border-green-200
-                     rounded px-3 py-2 mt-2">
-            ✓ No certificates expiring in the next 90 days.
-          </p>
-        }
-
-      </div>
-    </div>
-
-    <!-- Compliance Health -->
-    <div class="dash-card">
-      <div class="card-header">
-        <svg class="card-header-icon" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-        </svg>
-        <span>Certificate Compliance</span>
-      </div>
-      <div class="card-body">
-
-        <!-- Main compliance indicator -->
-        <div class="compliance-hero">
-          <span class="compliance-pct"
-                [class.text-green-700]="complianceColor === 'green'"
-                [class.text-amber-600]="complianceColor === 'amber'"
-                [class.text-red-600]="complianceColor === 'red'">
-            {{ compliancePct }}%
-          </span>
-          <span class="compliance-label"
-                [class.badge-green]="complianceColor === 'green'"
-                [class.badge-amber]="complianceColor === 'amber'"
-                [class.badge-red]="complianceColor === 'red'">
-            {{ complianceLabel }}
-          </span>
-        </div>
-
-        <!-- Progress bar -->
-        <div class="progress-track">
-          <div class="progress-fill green"
-               [style.width.%]="compliancePct">
-          </div>
-        </div>
-        <div class="progress-labels">
-          <span>0%</span>
-          <span>50%</span>
-          <span>100%</span>
-        </div>
-
-        <!-- Breakdown -->
-        <div class="compliance-breakdown">
-          <div class="cb-row">
-            <span class="cb-dot green"></span>
-            <span class="cb-label">Valid</span>
-            <span class="cb-bar-wrap">
-              <span class="cb-bar green" [style.width.%]="compliancePct"></span>
+    <mat-card class="dash-card" appearance="outlined">
+      <mat-card-header>
+        <div class="card-hd-dot" style="background:#15803d"></div>
+        <span class="card-title-text">Certificate Compliance</span>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="compliance-body">
+          <div class="compliance-hero">
+            <span class="compliance-pct"
+                  [style.color]="complianceColor === 'green' ? '#15803d'
+                                : complianceColor === 'amber' ? '#b45309' : '#b91c1c'">
+              {{ compliancePct }}%
             </span>
-            <span class="cb-pct">{{ compliancePct }}%</span>
+            <span class="compliance-tag" [class]="complianceColor">{{ complianceLabel }}</span>
           </div>
-          <div class="cb-row">
-            <span class="cb-dot amber"></span>
-            <span class="cb-label">Expiring</span>
-            <span class="cb-bar-wrap">
-              <span class="cb-bar amber" [style.width.%]="expiringPct"></span>
-            </span>
-            <span class="cb-pct">{{ expiringPct }}%</span>
+          <div class="prog-track">
+            <div class="prog-fill" [class]="complianceColor" [style.width.%]="compliancePct"></div>
           </div>
-          <div class="cb-row">
-            <span class="cb-dot red"></span>
-            <span class="cb-label">Expired</span>
-            <span class="cb-bar-wrap">
-              <span class="cb-bar red" [style.width.%]="expiredPct"></span>
-            </span>
-            <span class="cb-pct">{{ expiredPct }}%</span>
+          <div class="prog-labels"><span>0%</span><span>50%</span><span>100%</span></div>
+          <div class="cb-breakdown">
+            <div class="cb-row">
+              <span class="cb-dot green"></span>
+              <span class="cb-lbl">Valid</span>
+              <div class="cb-track"><span class="cb-bar green" [style.width.%]="compliancePct"></span></div>
+              <span class="cb-pct">{{ compliancePct }}%</span>
+            </div>
+            <div class="cb-row">
+              <span class="cb-dot amber"></span>
+              <span class="cb-lbl">Expiring</span>
+              <div class="cb-track"><span class="cb-bar amber" [style.width.%]="expiringPct"></span></div>
+              <span class="cb-pct">{{ expiringPct }}%</span>
+            </div>
+            <div class="cb-row">
+              <span class="cb-dot red"></span>
+              <span class="cb-lbl">Expired</span>
+              <div class="cb-track"><span class="cb-bar red" [style.width.%]="expiredPct"></span></div>
+              <span class="cb-pct">{{ expiredPct }}%</span>
+            </div>
           </div>
         </div>
-
-      </div>
-    </div>
+      </mat-card-content>
+    </mat-card>
 
   </div>
 
-  <!-- ── Row 3: Pending Actions + Activity + Departments ── -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+  <!-- ── Row 3: Pending + Activity + Departments ──────────── -->
+  <div class="grid-3">
 
-    <!-- Pending Actions -->
-    <div class="dash-card">
-      <div class="card-header">
-        <svg class="card-header-icon text-red-500" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-        </svg>
-        <span>Pending Actions</span>
-      </div>
-      <div class="card-body space-y-3">
-
-        <div class="pending-row">
-          <div class="pending-left">
-            <span class="pending-label">Awaiting Approval</span>
-            <span class="pending-desc">Certificate requests pending review</span>
-          </div>
-          <span class="pending-badge gray">0</span>
-        </div>
-
-        <div class="pending-row">
-          <div class="pending-left">
-            <span class="pending-label">Pending Generation</span>
-            <span class="pending-desc">Approved but not yet generated</span>
-          </div>
-          <span class="pending-badge amber">{{ summary.totalCertificates }}</span>
-        </div>
-
-        <div class="pending-row">
-          <div class="pending-left">
-            <span class="pending-label">Expiring (30 Days)</span>
-            <span class="pending-desc">Require renewal action</span>
-          </div>
-          <span class="pending-badge"
-                [class.red]="summary.expiringIn30Days > 0"
-                [class.gray]="summary.expiringIn30Days === 0">
-            {{ summary.expiringIn30Days }}
-          </span>
-        </div>
-
-        <div class="pending-row">
-          <div class="pending-left">
-            <span class="pending-label">Batches In Progress</span>
-            <span class="pending-desc">Training batches currently active</span>
-          </div>
-          <span class="pending-badge blue">{{ summary.totalBatches }}</span>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- Recent Activity -->
-    <div class="dash-card">
-      <div class="card-header">
-        <svg class="card-header-icon" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <span>Recent Activity</span>
-        <span class="card-header-tag">Last 7 days</span>
-      </div>
-      <div class="card-body p-0">
-        @for (item of recentActivity; track item.time) {
-          <div class="activity-row">
-            <div class="activity-icon-wrap">
-              <svg class="w-3.5 h-3.5 {{ item.iconColor }}" viewBox="0 0 24 24"
-                   fill="none" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                      [attr.d]="item.icon"/>
-              </svg>
+    <mat-card class="dash-card" appearance="outlined">
+      <mat-card-header>
+        <div class="card-hd-dot" style="background:#dc2626"></div>
+        <span class="card-title-text">Pending Actions</span>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="pending-list">
+          <div class="pend-row">
+            <div>
+              <div class="pend-lbl">Awaiting Approval</div>
+              <div class="pend-desc">Certificate requests pending review</div>
             </div>
-            <div class="activity-text">
-              <p class="activity-msg">{{ item.message }}</p>
-              <p class="activity-time">{{ item.time }}</p>
-            </div>
+            <mat-chip class="chip-gray" disableRipple>0</mat-chip>
           </div>
-        }
-      </div>
-    </div>
+          <div class="pend-row">
+            <div>
+              <div class="pend-lbl">Pending Generation</div>
+              <div class="pend-desc">Approved but not yet issued</div>
+            </div>
+            <mat-chip class="chip-amber" disableRipple>{{ summary.totalCertificates }}</mat-chip>
+          </div>
+          <div class="pend-row">
+            <div>
+              <div class="pend-lbl">Expiring (30 Days)</div>
+              <div class="pend-desc">Require renewal action</div>
+            </div>
+            <mat-chip [class]="summary.expiringIn30Days > 0 ? 'chip-red' : 'chip-gray'" disableRipple>
+              {{ summary.expiringIn30Days }}
+            </mat-chip>
+          </div>
+          <div class="pend-row">
+            <div>
+              <div class="pend-lbl">Batches In Progress</div>
+              <div class="pend-desc">Training batches currently active</div>
+            </div>
+            <mat-chip class="chip-blue" disableRipple>{{ summary.totalBatches }}</mat-chip>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
 
-    <!-- Department Distribution -->
-    <div class="dash-card">
-      <div class="card-header">
-        <svg class="card-header-icon" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H4v-2a4 4 0 014-4h1m4-4a4 4 0 100-8 4 4 0 000 8z"/>
-        </svg>
-        <span>Employees by Department</span>
-      </div>
-      <div class="card-body p-0">
-        <table class="dept-table">
-          <thead>
-            <tr>
-              <th>Department</th>
-              <th class="text-right">Staff</th>
-              <th class="text-right">Share</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (d of departments; track d.name) {
+    <mat-card class="dash-card" appearance="outlined">
+      <mat-card-header>
+        <div class="card-hd-dot" style="background:#1d4ed8"></div>
+        <span class="card-title-text">Recent Activity</span>
+        <span class="card-hd-tag">Last 7 days</span>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="activity-list">
+          @for (item of recentActivity; track item.time) {
+            <div class="act-row">
+              <div class="act-icon" [style.background]="item.iconBg">
+                <mat-icon [style.color]="item.iconColor" style="font-size:14px;width:14px;height:14px">
+                  {{ item.matIcon }}
+                </mat-icon>
+              </div>
+              <div>
+                <div class="act-msg">{{ item.message }}</div>
+                <div class="act-time">{{ item.time }}</div>
+              </div>
+            </div>
+          }
+          @if (recentActivity.length === 0) {
+            <div style="padding:20px 14px;font-size:0.78rem;color:#94a3b8;text-align:center">
+              No activity in the last 7 days.
+            </div>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="dash-card" appearance="outlined">
+      <mat-card-header>
+        <div class="card-hd-dot" style="background:#4338ca"></div>
+        <span class="card-title-text">Employees by Department</span>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="dept-wrap">
+          <table class="dept-table">
+            <thead>
               <tr>
-                <td>
-                  <span class="dept-name">{{ d.name }}</span>
-                  <div class="dept-bar-wrap">
-                    <div class="dept-bar" [style.width.%]="d.pct"></div>
-                  </div>
-                </td>
-                <td class="text-right font-semibold text-gray-800">{{ d.count }}</td>
-                <td class="text-right text-gray-500">{{ d.pct }}%</td>
+                <th>Department</th>
+                <th style="text-align:right">Staff</th>
+                <th style="text-align:right">Share</th>
               </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
+            </thead>
+            <tbody>
+              @for (d of departments; track d.name) {
+                <tr>
+                  <td>
+                    <span class="dept-name">{{ d.name }}</span>
+                    <div class="dept-bar-wrap">
+                      <div class="dept-bar" [style.width.%]="d.pct"></div>
+                    </div>
+                  </td>
+                  <td style="text-align:right;font-weight:600;color:#334155">{{ d.count }}</td>
+                  <td style="text-align:right;color:#94a3b8">{{ d.pct }}%</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </mat-card-content>
+    </mat-card>
 
   </div>
 
-  <!-- ── Row 4: Quick Reports ───────────────────────────── -->
-  <div class="section-label">Quick Reports</div>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <!-- ── Quick Reports ────────────────────────────────────── -->
+  <div class="section-lbl">Quick Reports</div>
+  <div class="qr-grid">
 
-    <a routerLink="/reports/competency-register" class="report-card">
-      <div class="report-card-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-        </svg>
+    <a routerLink="/reports/competency-register" class="qr-card">
+      <div class="qr-icon" style="background:#dbeafe">
+        <mat-icon style="color:#1d4ed8">assignment</mat-icon>
       </div>
-      <div class="report-card-body">
-        <p class="report-card-title">Competency Register</p>
-        <p class="report-card-desc">
-          Full employee competency listing with certificate numbers,
-          validity dates and department filters.
-        </p>
+      <div class="qr-body">
+        <div class="qr-title">Competency Register</div>
+        <div class="qr-desc">Full employee competency listing with certificate numbers and department filters.</div>
       </div>
-      <div class="report-card-action">
-        Open
-        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-        </svg>
-      </div>
+      <div class="qr-arrow"><mat-icon>chevron_right</mat-icon></div>
     </a>
 
-    <a routerLink="/reports/active-certificates" class="report-card">
-      <div class="report-card-icon green">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
+    <a routerLink="/reports/active-certificates" class="qr-card">
+      <div class="qr-icon" style="background:#dcfce7">
+        <mat-icon style="color:#15803d">verified</mat-icon>
       </div>
-      <div class="report-card-body">
-        <p class="report-card-title">Active Certificates</p>
-        <p class="report-card-desc">
-          All currently valid certificates with expiry status indicators
-          and days-to-expiry tracking.
-        </p>
+      <div class="qr-body">
+        <div class="qr-title">Active Certificates</div>
+        <div class="qr-desc">All valid certificates with expiry status and days-to-expiry tracking.</div>
       </div>
-      <div class="report-card-action">
-        Open
-        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-        </svg>
-      </div>
+      <div class="qr-arrow"><mat-icon>chevron_right</mat-icon></div>
     </a>
 
-    <a routerLink="/reports/batch-summary" class="report-card">
-      <div class="report-card-icon indigo">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-        </svg>
+    <a routerLink="/reports/batch-summary" class="qr-card">
+      <div class="qr-icon" style="background:#e0e7ff">
+        <mat-icon style="color:#4338ca">layers</mat-icon>
       </div>
-      <div class="report-card-body">
-        <p class="report-card-title">Batch Summary</p>
-        <p class="report-card-desc">
-          Training batch completion status, participant counts,
-          and active versus expired certificate breakdown.
-        </p>
+      <div class="qr-body">
+        <div class="qr-title">Batch Summary</div>
+        <div class="qr-desc">Training batch completion status and active vs expired certificate breakdown.</div>
       </div>
-      <div class="report-card-action">
-        Open
-        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-        </svg>
-      </div>
+      <div class="qr-arrow"><mat-icon>chevron_right</mat-icon></div>
     </a>
 
   </div>
 
   } <!-- end @else -->
-
 </div>

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CCSDashboard")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5c9d984fcfe39e6f74bb6a8251ec06f5a2f52f60")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c54456b28b2d0c9ff08a191b3fce510efb0b5c57")]
 [assembly: System.Reflection.AssemblyProductAttribute("CCSDashboard")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CCSDashboard")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

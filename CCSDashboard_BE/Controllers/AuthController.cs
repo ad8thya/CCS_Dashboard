@@ -40,6 +40,10 @@ namespace CCSDashboard.Controllers
             {
                 return Unauthorized();
             }
+                var previousLogin = user.LastLoginAt;   // capture before overwriting
+    user.LastLoginAt = DateTime.UtcNow;
+    _context.SaveChanges();
+
 
             var claims = new[]
 {
@@ -71,10 +75,13 @@ var tokenString =
     new JwtSecurityTokenHandler()
         .WriteToken(token);
 
-return Ok(new
-{
-    token = tokenString
-});
+return Ok(new LoginResponse
+    {
+        Token = new JwtSecurityTokenHandler().WriteToken(token),
+        LastLoginAt = previousLogin   // null on first-ever login
+    });
         }
+
+        
     }
 }

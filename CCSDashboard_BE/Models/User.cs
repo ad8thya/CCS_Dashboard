@@ -9,5 +9,8 @@ namespace CCSDashboard.Models
         public string Password { get; set; } = string.Empty;
 
         public string Role { get; set; } = string.Empty;
+
+        public DateTime? LastLoginAt { get; set; }
+
     }
 }

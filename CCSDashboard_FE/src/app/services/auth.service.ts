@@ -12,10 +12,19 @@ export class AuthService {
   private readonly loginUrl = `${environment.apiBaseUrl}/auth/login`;
 
   login(username: string, password: string) {
-    return this.http.post<LoginResponse>(this.loginUrl, {
-      username,
-      password,
-    });
+  return this.http.post<LoginResponse>(this.loginUrl, { username, password });
+  }
+
+  storeLastLogin(lastLoginAt: string | null): void {
+  if (lastLoginAt) {
+    localStorage.setItem('lastLoginAt', lastLoginAt);
+  } else {
+    localStorage.removeItem('lastLoginAt');
+  }
+  }
+
+  getLastLogin(): string | null {
+  return localStorage.getItem('lastLoginAt');
   }
 
   getToken(): string | null {
@@ -27,10 +36,11 @@ export class AuthService {
   }
 
   storeToken(token: string): void {
-    localStorage.setItem('token', token);
+  localStorage.setItem('token', token);
   }
 
   logout(): void {
-    localStorage.removeItem('token');
-  }
+  localStorage.removeItem('token');
+  localStorage.removeItem('lastLoginAt');
+}
 }

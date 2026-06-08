@@ -127,5 +127,92 @@ public async Task<IActionResult> ExportBatchSummary()
 
             return Ok(summary);
         }
+
+        [HttpGet("department-distribution")]
+public async Task<IActionResult> GetDepartmentDistribution()
+{
+    var groups = await _context.Employees
+        .GroupBy(e => e.Department)
+        .Select(g => new { Department = g.Key, Count = g.Count() })
+        .OrderByDescending(g => g.Count)
+        .ToListAsync();
+
+    var total = groups.Sum(g => g.Count);
+
+    var result = groups.Select(g => new
+    {
+        name = g.Department,
+        count = g.Count,
+        pct = total > 0 ? (int)Math.Round((double)g.Count / total * 100) : 0
+    });
+
+    return Ok(result);
+}
+
+[HttpGet("recent-activity")]
+public async Task<IActionResult> GetRecentActivity()
+{
+    var cutoff = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7));
+
+    // Certificates issued in last 7 days
+    var recentCerts = await _context.Certificates
+        .Include(c => c.Employee)
+        .Include(c => c.Batch)
+        .Where(c => c.IssueDate >= cutoff)
+        .OrderByDescending(c => c.IssueDate)
+        .Take(5)
+        .Select(c => new
+        {
+            type = "certificate_issued",
+            message = $"Certificate {c.CertificateNumber} issued to {c.Employee.Name}",
+            date = c.IssueDate,
+            batchCode = c.Batch.BatchCode
+        })
+        .ToListAsync();
+
+    // Batches that ended in last 7 days
+    var recentBatches = await _context.Batches
+        .Include(b => b.Certificates)
+        .Where(b => b.EndDate >= cutoff)
+        .OrderByDescending(b => b.EndDate)
+        .Take(3)
+        .Select(b => new
+        {
+            type = "batch_completed",
+            message = $"Batch {b.BatchCode} completed — {b.Certificates.Count} certificate(s) generated",
+            date = b.EndDate,
+            batchCode = b.BatchCode
+        })
+        .ToListAsync();
+
+    // Certs expiring within 15 days (flagged as alerts)
+    var today = DateOnly.FromDateTime(DateTime.UtcNow);
+    var expiringCount = await _context.Certificates
+        .CountAsync(c => c.Status == "Active"
+            && c.ExpiryDate >= today
+            && c.ExpiryDate <= today.AddDays(15));
+
+    var activity = recentCerts
+        .Cast<object>()
+        .Concat(recentBatches)
+        .ToList();
+
+    if (expiringCount > 0)
+    {
+        activity.Insert(0, new
+        {
+            type = "expiry_alert",
+            message = $"{expiringCount} certificate(s) expiring within 15 days flagged for review",
+            date = today,
+            batchCode = ""
+        });
     }
+
+    return Ok(activity
+        .Take(6)
+        .Select((a, i) => a));
+}
+    }
+
+    
 }

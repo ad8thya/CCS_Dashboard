@@ -32,10 +32,11 @@ export class LoginComponent {
 
     this.authService.login(this.username, this.password).subscribe({
       next: (response) => {
-        this.authService.storeToken(response.token);
-        this.loading = false;
-        this.router.navigate(['/dashboard']);
-      },
+  this.authService.storeToken(response.token);
+  this.authService.storeLastLogin(response.lastLoginAt);  // add this line
+  this.loading = false;
+  this.router.navigate(['/dashboard']);
+},
       error: (err) => {
   console.log('ERROR HANDLER REACHED');
   console.log('Status:', err.status);

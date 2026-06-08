@@ -2,6 +2,10 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
+import { forkJoin } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { AuthService } from '../../services/auth.service';
+
 
 interface ActivityItem {
   icon: string;
@@ -16,6 +20,12 @@ interface DeptRow {
   pct: number;
 }
 
+interface ActivityApiItem {
+  type: string;
+  message: string;
+  date: string;
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -25,6 +35,7 @@ interface DeptRow {
 })
 export class Dashboard implements OnInit {
   private http = inject(HttpClient);
+  private baseUrl = environment.apiBaseUrl;
 
   loading = true;
 
@@ -35,7 +46,17 @@ export class Dashboard implements OnInit {
     year: 'numeric',
   });
 
-  lastLogin = 'Monday, 09 Jun 2026  08:42 AM';
+  lastLogin = this.formatLastLogin(inject(AuthService).getLastLogin());
+
+private formatLastLogin(raw: string | null): string {
+  if (!raw) return 'First login';
+  const d = new Date(raw);
+  return d.toLocaleDateString('en-GB', {
+    weekday: 'long', day: '2-digit', month: 'short', year: 'numeric'
+  }) + '  ' + d.toLocaleTimeString('en-GB', {
+    hour: '2-digit', minute: '2-digit', hour12: true
+  }).toUpperCase();
+}
 
   summary = {
     totalEmployees:      0,
@@ -47,7 +68,6 @@ export class Dashboard implements OnInit {
     totalBatches:        0,
   };
 
-  // Computed compliance values
   get compliancePct(): number {
     if (!this.summary.totalCertificates) return 0;
     return Math.round(
@@ -81,63 +101,71 @@ export class Dashboard implements OnInit {
     return 'red';
   }
 
-  // Mock data — replace with API when available
-  recentActivity: ActivityItem[] = [
-    {
-      icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-      iconColor: 'text-green-600',
-      message: 'Batch B2026-03 completed — 3 certificates generated',
-      time: 'Today, 10:14 AM',
-    },
-    {
-      icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
-      iconColor: 'text-amber-500',
-      message: '2 certificates expiring within 15 days flagged for review',
-      time: 'Today, 09:30 AM',
-    },
-    {
-      icon: 'M12 4v16m8-8H4',
-      iconColor: 'text-blue-600',
-      message: 'New induction batch initiated — Signalling dept',
-      time: 'Yesterday, 04:15 PM',
-    },
-    {
-      icon: 'M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4',
-      iconColor: 'text-indigo-600',
-      message: 'Competency Register exported by Administrator',
-      time: 'Yesterday, 02:00 PM',
-    },
-    {
-      icon: 'M5 13l4 4L19 7',
-      iconColor: 'text-green-600',
-      message: 'Certificate TKSE26003 approved and issued to Deva',
-      time: '06 Jun 2026, 11:45 AM',
-    },
-  ];
-
-  departments: DeptRow[] = [
-    { name: 'Track / P-Way',            count: 3, pct: 37 },
-    { name: 'Signalling',               count: 2, pct: 25 },
-    { name: 'Automatic Fare Collection',count: 1, pct: 13 },
-    { name: 'Telecom',                  count: 1, pct: 13 },
-    { name: 'Operations',               count: 1, pct: 12 },
-  ];
+  recentActivity: ActivityItem[] = [];
+  departments: DeptRow[] = [];
 
   ngOnInit(): void {
-    this.http.get<any>('http://localhost:5266/api/reports/summary').subscribe({
-      next: (data) => {
-        this.summary.totalEmployees      = data.totalEmployees;
-        this.summary.totalCertificates   = data.totalCertificates;
-        this.summary.activeCertificates  = data.activeCertificates;
-        this.summary.expiringIn30Days    = data.expiringIn30Days;
-        this.summary.expiringIn90Days    = data.expiringIn90Days;
-        this.summary.expiredCertificates = data.expiredCertificates;
-        this.summary.totalBatches        = data.totalBatches;
+    forkJoin({
+      summary:      this.http.get<any>(`${this.baseUrl}/reports/summary`),
+      departments:  this.http.get<DeptRow[]>(`${this.baseUrl}/reports/department-distribution`),
+      activity:     this.http.get<ActivityApiItem[]>(`${this.baseUrl}/reports/recent-activity`),
+    }).subscribe({
+      next: ({ summary, departments, activity }) => {
+        this.summary.totalEmployees      = summary.totalEmployees;
+        this.summary.totalCertificates   = summary.totalCertificates;
+        this.summary.activeCertificates  = summary.activeCertificates;
+        this.summary.expiringIn30Days    = summary.expiringIn30Days;
+        this.summary.expiringIn90Days    = summary.expiringIn90Days;
+        this.summary.expiredCertificates = summary.expiredCertificates;
+        this.summary.totalBatches        = summary.totalBatches;
+
+        this.departments = departments;
+        this.recentActivity = activity.map(a => this.mapActivity(a));
         this.loading = false;
       },
       error: () => {
         this.loading = false;
       },
     });
+  }
+
+  private mapActivity(a: ActivityApiItem): ActivityItem {
+    const dateLabel = this.formatActivityDate(a.date);
+
+    switch (a.type) {
+      case 'batch_completed':
+        return {
+          icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+          iconColor: 'text-green-600',
+          message: a.message,
+          time: dateLabel,
+        };
+      case 'expiry_alert':
+        return {
+          icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+          iconColor: 'text-amber-500',
+          message: a.message,
+          time: dateLabel,
+        };
+      case 'certificate_issued':
+      default:
+        return {
+          icon: 'M5 13l4 4L19 7',
+          iconColor: 'text-green-600',
+          message: a.message,
+          time: dateLabel,
+        };
+    }
+  }
+
+  private formatActivityDate(dateStr: string): string {
+    const date = new Date(dateStr);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) return 'Today';
+    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 }

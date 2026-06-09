@@ -84,9 +84,10 @@ export class LayoutComponent {
   }
 
   logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
+  this.userMenuOpen = false;
+  this.authService.logout();
+  this.router.navigate(['/login']);
+}
 
   getCurrentPageTitle(): string {
     const url = this.router.url;
@@ -97,4 +98,12 @@ export class LayoutComponent {
     if (url.includes('reports')) return 'Reports';
     return 'Dashboard';
   }
+
+  userMenuOpen = false;
+
+toggleUserMenu(): void {
+  this.userMenuOpen = !this.userMenuOpen;
+}
+
+
 }

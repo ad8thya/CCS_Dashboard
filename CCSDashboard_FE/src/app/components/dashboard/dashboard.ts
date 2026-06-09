@@ -129,20 +129,23 @@ private formatLastLogin(raw: string | null): string {
       
     }).subscribe({
       next: ({ summary, departments, activity }) => {
-        this.summary.totalEmployees      = summary.totalEmployees;
-        this.summary.totalCertificates   = summary.totalCertificates;
-        this.summary.activeCertificates  = summary.activeCertificates;
-        this.summary.expiringIn7Days  = summary.expiringIn7Days;
-        this.summary.expiringIn15Days = summary.expiringIn15Days;
-        this.summary.expiringIn30Days    = summary.expiringIn30Days;
-        this.summary.expiringIn90Days    = summary.expiringIn90Days;
-        this.summary.expiredCertificates = summary.expiredCertificates;
-        this.summary.totalBatches        = summary.totalBatches;
-        
-        this.departments = departments;
-        this.recentActivity = activity.map(a => this.mapActivity(a));
-        this.loading = false;
-      },
+  this.summary.totalEmployees      = summary.totalEmployees;
+  this.summary.totalCertificates   = summary.totalCertificates;
+  this.summary.activeCertificates  = summary.activeCertificates;
+  this.summary.expiringIn7Days     = summary.expiringIn7Days;
+  this.summary.expiringIn15Days    = summary.expiringIn15Days;
+  this.summary.expiringIn30Days    = summary.expiringIn30Days;
+  this.summary.expiringIn90Days    = summary.expiringIn90Days;
+  this.summary.expiredCertificates = summary.expiredCertificates;
+  this.summary.totalBatches        = summary.totalBatches;
+  this.summary.totalDepartments    = summary.totalDepartments;   // ← add
+  this.summary.totalDesignations   = summary.totalDesignations;  // ← add
+  this.summary.totalContractors    = summary.totalContractors;   // ← add
+
+  this.departments = departments;
+  this.recentActivity = activity.map(a => this.mapActivity(a));
+  this.loading = false;
+},
       error: () => {
         this.loading = false;
       },

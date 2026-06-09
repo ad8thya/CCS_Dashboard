@@ -1,13 +1,13 @@
 """
-CCS Data Seeder
-Reads the three Excel files and inserts into PostgreSQL.
-Run: python seed_ccs.py
+CCS Full Data Seeder
+Generates 50+ realistic records per category for CMRL CCS.
+Matches normalized FK schema: Departments, Designations, Contractors tables.
+
+Run: python seed_ccs_full.py
 """
 
 import psycopg2
-from psycopg2.extras import execute_values
-from openpyxl import load_workbook
-from datetime import datetime, date
+from datetime import date, timedelta
 
 # ─── CONFIG ──────────────────────────────────────────────────────────────────
 DB = {
@@ -18,214 +18,566 @@ DB = {
     "password": "password",
 }
 
-BATCH_FILE  = r"C:\Users\adisi\Downloads\Batch_Report_Summary_20260601_1216.xlsx"
-CERT_FILE   = r"C:\Users\adisi\Downloads\Active_Certificates_2026-06-01_to_2026-06-30_20260601_1219.xlsx"
-COMP_FILE   = r"C:\Users\adisi\Downloads\Competency_Register.xlsx"
+# ─── REFERENCE DATA ──────────────────────────────────────────────────────────
 
-# ─── HELPERS ─────────────────────────────────────────────────────────────────
+DEPARTMENTS = [
+    "Track/P-Way",
+    "Signalling",
+    "Automatic Fare Collection",
+    "Telecom",
+    "Operations",
+    "Rolling Stock",
+    "Electrical (OHE)",
+    "Civil",
+    "OCC",
+    "Station Operations",
+]
 
-def xl_serial_to_date(value) -> date:
-    """Convert Excel serial number OR already-a-date to a Python date."""
-    if isinstance(value, (datetime, date)):
-        return value.date() if isinstance(value, datetime) else value
-    if isinstance(value, (int, float)):
-        # Excel epoch: Dec 30 1899  (accounts for Lotus 1-2-3 leap-year bug)
-        return (datetime(1899, 12, 30) + __import__('datetime').timedelta(days=int(value))).date()
-    if isinstance(value, str):
-        for fmt in ("%d/%m/%Y", "%m/%d/%Y", "%Y-%m-%d"):
-            try:
-                return datetime.strptime(value.strip(), fmt).date()
-            except ValueError:
-                continue
-    raise ValueError(f"Cannot parse date: {value!r}")
+DESIGNATIONS = [
+    "Junior Engineer",
+    "Section Engineer",
+    "Senior Section Engineer",
+    "Assistant Engineer",
+    "Deputy Engineer",
+    "Supervisor (Team Leader)",
+    "Technician",
+    "Senior Technician",
+    "Manager",
+    "Deputy Manager",
+    "Assistant Manager",
+    "Traffic Controller",
+    "Station Controller",
+    "Train Operator",
+    "Gang Man",
+    "Track Man",
+]
+
+CONTRACTORS = [
+    ("CMRL",                 "",  ""),
+    ("Xenovex",              "",  ""),
+    ("Armtech",              "",  ""),
+    ("AB & SONS",            "",  ""),
+    ("A One",                "",  ""),
+    ("Alstom",               "",  ""),
+    ("Siemens",              "",  ""),
+    ("L&T Metro",            "",  ""),
+    ("Thales",               "",  ""),
+    ("Bombardier",           "",  ""),
+    ("Cubic Transportation", "",  ""),
+    ("ITD Cementation",      "",  ""),
+]
+
+# Dept → competency areas
+DEPT_AREAS = {
+    "Track/P-Way": [
+        "Supervisor/Section Engineer/Junior Engineer",
+        "Technician",
+        "Gangman/Trackman",
+    ],
+    "Signalling": [
+        "Supervisor-IOH/PM/CM/Material Management",
+        "Section Engineer/Junior Engineer/Techician",
+        "Technician",
+    ],
+    "Automatic Fare Collection": [
+        "Section Engineer/Junior Engineer/Techician",
+        "Technician",
+        "Supervisor-IOH/PM/CM/Material Management",
+    ],
+    "Telecom": [
+        "Traffic Regulator",
+        "Section Engineer/Junior Engineer/Techician",
+        "Technician",
+    ],
+    "Operations": [
+        "Technicain/Senior Technician/Electrical Supervisor and Equivalent Post",
+        "Traffic Regulator",
+        "Station Controller/Train Operator",
+    ],
+    "Rolling Stock": [
+        "Section Engineer/Junior Engineer/Techician",
+        "Technician",
+        "Supervisor-IOH/PM/CM/Material Management",
+    ],
+    "Electrical (OHE)": [
+        "Section Engineer/Junior Engineer/Techician",
+        "Technician",
+        "Supervisor/Section Engineer/Junior Engineer",
+    ],
+    "Civil": [
+        "Supervisor/Section Engineer/Junior Engineer",
+        "Section Engineer/Junior Engineer/Techician",
+    ],
+    "OCC": [
+        "Station Controller/Train Operator",
+        "Traffic Regulator",
+        "Supervisor-IOH/PM/CM/Material Management",
+    ],
+    "Station Operations": [
+        "Station Controller/Train Operator",
+        "Traffic Regulator",
+        "Technicain/Senior Technician/Electrical Supervisor and Equivalent Post",
+    ],
+}
+
+DEPT_CERT_PREFIX = {
+    "Track/P-Way":               "TKSE",
+    "Signalling":                "STSP",
+    "Automatic Fare Collection": "AFJE",
+    "Telecom":                   "TETC",
+    "Operations":                "OPMR",
+    "Rolling Stock":             "RSJE",
+    "Electrical (OHE)":          "ELOE",
+    "Civil":                     "CVSE",
+    "OCC":                       "OCCS",
+    "Station Operations":        "SOPS",
+}
+
+NAMES = [
+    "Brue", "Mani", "Alfred", "George", "Vinoth", "Raja", "Deva",
+    "Arjun Krishnamurthy", "Suresh Babu", "Ramesh Kumar",
+    "Karthik Rajan", "Murugan Selvam", "Senthil Nathan",
+    "Vijay Anand", "Balaji Subramanian", "Ganesh Mohan",
+    "Prakash Sundaram", "Dinesh Chandran", "Manikandan Pillai",
+    "Sathish Kumar", "Arun Prabhu", "Sivakumar Natarajan",
+    "Venkatesh Iyer", "Rajesh Pandian", "Pradeep Annamalai",
+    "Govindarajan T", "Hariharan S", "Ilango Periasamy",
+    "Jayakumar Velu", "Kannan Duraisamy", "Lakshmanan R",
+    "Muthuraj Palanisamy", "Nandakumar C", "Pandi Arumugam",
+    "Saravanan Thangavel", "Tamilselvan K", "Udhayakumar M",
+    "Vasanth Ramalingam", "Yuvaraj Sekar", "Anbu Selvan",
+    "Boopathi Raman", "Chelladurai V", "Durai Murugan",
+    "Elavarasan P", "Feroz Khan", "Gnanasekaran A",
+    "Hemalatha Devi", "Indira Priyadharshini", "Janaki Raman",
+    "Kalaivani Suresh", "Lavanya Krishnan", "Meenakshi Sundar",
+    "Nalini Rajendran", "Oviya Chandrasekaran", "Pavithra Moorthy",
+    "Rekha Balakrishnan", "Sangeetha Murugan", "Thenmozhi K",
+]
 
 
-def rows(sheet, skip_header_rows=3):
-    """Yield non-empty data rows, skipping the first N header rows."""
-    for i, row in enumerate(sheet.iter_rows(values_only=True)):
-        if i < skip_header_rows:
-            continue
-        if all(v is None for v in row):
-            continue
-        yield row
+# ─── MASTER DATA SEED ────────────────────────────────────────────────────────
+
+def seed_departments(cur):
+    """Insert departments, return {name: id} map."""
+    print("\nSeeding Departments...")
+    for name in DEPARTMENTS:
+        cur.execute("""
+            INSERT INTO "Departments" ("Name", "IsActive")
+            VALUES (%s, true)
+            ON CONFLICT ("Name") DO NOTHING
+        """, (name,))
+
+    cur.execute("""SELECT "Id", "Name" FROM "Departments" """)
+    result = {row[1]: row[0] for row in cur.fetchall()}
+    print(f"  {len(result)} departments available")
+    return result
 
 
-# ─── PARSE ───────────────────────────────────────────────────────────────────
+def seed_designations(cur):
+    """Insert designations, return {name: id} map."""
+    print("\nSeeding Designations...")
+    for name in DESIGNATIONS:
+        cur.execute("""
+            INSERT INTO "Designations" ("Name", "IsActive")
+            VALUES (%s, true)
+            ON CONFLICT ("Name") DO NOTHING
+        """, (name,))
 
-def parse_batches():
-    wb = load_workbook(BATCH_FILE, read_only=True, data_only=True)
-    ws = wb.active
-    batches = []
-    for row in rows(ws, skip_header_rows=3):
-        # columns: S.No | Batch | Training Type | Department | Category | From | To | Trainees
-        if row[0] is None:
-            continue
-        batches.append({
-            "batch_code":   str(row[1]).strip(),
-            "course_name":  str(row[2]).strip(),   # Training Type as course name
-            "department":   str(row[3]).strip(),
-            "category":     str(row[4]).strip(),
-            "start_date":   xl_serial_to_date(row[5]),
-            "end_date":     xl_serial_to_date(row[6]),
-            "trainer":      "",                     # not in source file
-            "venue":        "",
-        })
-    wb.close()
-    return batches
+    cur.execute("""SELECT "Id", "Name" FROM "Designations" """)
+    result = {row[1]: row[0] for row in cur.fetchall()}
+    print(f"  {len(result)} designations available")
+    return result
 
 
-def parse_employees_and_certs():
-    """
-    Competency Register has the richest employee data.
-    Active Certificates has the area (competency area) per cert.
-    We merge on CertificateNo.
-    """
-    # --- Active Certificates (area field) ---
-    wb_cert = load_workbook(CERT_FILE, read_only=True, data_only=True)
-    ws_cert = wb_cert.active
-    # columns: S.No | Staff ID | Employee | Department | Contractor | Area | Cert No | Valid From | Valid Until
-    area_map = {}   # cert_no -> area
-    dept_map = {}   # staff_id -> department
-    contractor_map = {}  # staff_id -> contractor
-    for row in rows(ws_cert, skip_header_rows=3):
-        if row[0] is None:
-            continue
-        cert_no  = str(row[6]).strip()
-        area_map[cert_no] = str(row[5]).strip()
-        staff_id = str(row[1]).strip()
-        dept_map[staff_id]       = str(row[3]).strip()
-        contractor_map[staff_id] = str(row[4]).strip()
-    wb_cert.close()
+def seed_contractors(cur):
+    """Insert contractors, return {name: id} map."""
+    print("\nSeeding Contractors...")
+    for name, contact, phone in CONTRACTORS:
+        cur.execute("""
+            INSERT INTO "Contractors" ("Name", "ContactPerson", "Phone", "IsActive")
+            VALUES (%s, %s, %s, true)
+            ON CONFLICT DO NOTHING
+        """, (name, contact, phone))
 
-    # --- Competency Register (master employee + cert data) ---
-    wb_comp = load_workbook(COMP_FILE, read_only=True, data_only=True)
-    ws_comp = wb_comp.active
-    # columns: S.No | Name | Designation | Staff ID | DOB | Cert No | Company | Date of Issue | Date of Validity | Remarks
-    employees = {}   # staff_id -> dict
-    certs     = []
+    cur.execute("""SELECT "Id", "Name" FROM "Contractors" """)
+    result = {row[1]: row[0] for row in cur.fetchall()}
+    print(f"  {len(result)} contractors available")
+    return result
 
-    for row in rows(ws_comp, skip_header_rows=3):
-        if row[0] is None:
-            continue
 
-        name        = str(row[1]).strip()
-        designation = str(row[2]).strip()
-        staff_id    = str(row[3]).strip()
-        dob_raw     = row[4]
-        cert_no     = str(row[5]).strip()
-        company     = str(row[6]).strip()
-        issue_raw   = row[7]
-        valid_raw   = row[8]
+# ─── EMPLOYEES ───────────────────────────────────────────────────────────────
 
-        dept = dept_map.get(staff_id, "")
+def make_employees():
+    dept_counts = {
+        "Track/P-Way":               8,
+        "Signalling":                7,
+        "Automatic Fare Collection": 7,
+        "Telecom":                   6,
+        "Operations":                6,
+        "Rolling Stock":             6,
+        "Electrical (OHE)":          5,
+        "Civil":                     4,
+        "OCC":                       4,
+        "Station Operations":        4,
+    }
 
-        if staff_id not in employees:
-            employees[staff_id] = {
-                "employee_code": staff_id,
-                "name":          name,
-                "designation":   designation,
+    contractor_pool = ["CMRL", "CMRL", "CMRL",  # weight CMRL higher
+                       "Xenovex", "Armtech", "AB & SONS", "A One",
+                       "Alstom", "Siemens", "L&T Metro", "Thales",
+                       "Bombardier", "Cubic Transportation", "ITD Cementation"]
+
+    desig_cycle = [
+        "Junior Engineer", "Section Engineer", "Technician",
+        "Senior Technician", "Supervisor (Team Leader)", "Assistant Engineer",
+        "Deputy Engineer", "Traffic Controller", "Station Controller",
+        "Manager", "Train Operator", "Gang Man",
+    ]
+
+    employees = []
+    staff_counter = 300
+    name_idx = 7  # skip first 7 already in DB
+
+    for dept, count in dept_counts.items():
+        for i in range(count):
+            employees.append({
+                "employee_code": f"{staff_counter:04d}",
+                "name":          NAMES[name_idx % len(NAMES)],
+                "designation":   desig_cycle[staff_counter % len(desig_cycle)],
                 "department":    dept,
-                "contractor":    contractor_map.get(staff_id, company),
-            }
+                "contractor":    contractor_pool[i % len(contractor_pool)],
+            })
+            staff_counter += 1
+            name_idx += 1
 
-        certs.append({
-            "certificate_number": cert_no,
-            "employee_code":      staff_id,
-            "issue_date":         xl_serial_to_date(issue_raw),
-            "expiry_date":        xl_serial_to_date(valid_raw),
-            "competency_area":    area_map.get(cert_no, ""),
-            "status":             "Active",
-        })
-
-    wb_comp.close()
-    return list(employees.values()), certs
+    return employees
 
 
-# ─── INSERT ──────────────────────────────────────────────────────────────────
+def seed_employees(cur, employees, dept_id_map, desig_id_map, contractor_id_map):
+    print(f"\nSeeding {len(employees)} employees...")
+    inserted = 0
+    skipped = 0
+
+    for e in employees:
+        dept_id = dept_id_map.get(e["department"])
+        desig_id = desig_id_map.get(e["designation"])
+        contractor_id = contractor_id_map.get(e["contractor"])  # may be None — that's fine
+
+        if dept_id is None:
+            print(f"  SKIP {e['employee_code']}: department '{e['department']}' not found")
+            skipped += 1
+            continue
+        if desig_id is None:
+            print(f"  SKIP {e['employee_code']}: designation '{e['designation']}' not found")
+            skipped += 1
+            continue
+
+        cur.execute("""
+            INSERT INTO "Employees"
+                ("EmployeeCode", "Name", "DepartmentId", "DesignationId", "ContractorId")
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT ("EmployeeCode") DO NOTHING
+        """, (
+            e["employee_code"],
+            e["name"],
+            dept_id,
+            desig_id,
+            contractor_id,   # nullable FK — postgres accepts None as NULL
+        ))
+        if cur.rowcount:
+            inserted += 1
+
+    print(f"  Inserted {inserted} new employees ({skipped} skipped)")
+    return inserted
+
+
+# ─── BATCHES ─────────────────────────────────────────────────────────────────
+
+def make_batches():
+    return [
+        # (code, course_name, dept, start, end)
+        # Track/P-Way
+        ("TK-IND-2401", "Induction Training",       "Track/P-Way",               date(2024, 1, 15), date(2024, 1, 30)),
+        ("TK-REF-2404", "Refresher Training",        "Track/P-Way",               date(2024, 4, 3),  date(2024, 4, 18)),
+        ("TK-IND-2407", "Induction Training",        "Track/P-Way",               date(2024, 7, 8),  date(2024, 7, 25)),
+        ("TK-SKL-2409", "Special/Upskill Training",  "Track/P-Way",               date(2024, 9, 2),  date(2024, 9, 14)),
+        ("TK-IND-2501", "Induction Training",        "Track/P-Way",               date(2025, 1, 6),  date(2025, 1, 24)),
+        ("TK-REF-2504", "Refresher Training",        "Track/P-Way",               date(2025, 4, 7),  date(2025, 4, 22)),
+        ("TK-CON-2506", "Conversion Training",       "Track/P-Way",               date(2025, 6, 2),  date(2025, 6, 16)),
+        ("TK-IND-2601", "Induction Training",        "Track/P-Way",               date(2026, 1, 13), date(2026, 2, 3)),
+        # Signalling
+        ("SG-IND-2402", "Induction Training",        "Signalling",                date(2024, 2, 5),  date(2024, 2, 20)),
+        ("SG-REF-2405", "Refresher Training",        "Signalling",                date(2024, 5, 6),  date(2024, 5, 21)),
+        ("SG-SKL-2408", "Special/Upskill Training",  "Signalling",                date(2024, 8, 12), date(2024, 8, 24)),
+        ("SG-IND-2501", "Induction Training",        "Signalling",                date(2025, 1, 20), date(2025, 2, 7)),
+        ("SG-REF-2506", "Refresher Training",        "Signalling",                date(2025, 6, 9),  date(2025, 6, 25)),
+        ("SG-IND-2601", "Induction Training",        "Signalling",                date(2026, 2, 3),  date(2026, 2, 21)),
+        # AFC
+        ("AF-IND-2401", "Induction Training",        "Automatic Fare Collection", date(2024, 1, 22), date(2024, 2, 6)),
+        ("AF-REF-2406", "Refresher Training",        "Automatic Fare Collection", date(2024, 6, 3),  date(2024, 6, 17)),
+        ("AF-SKL-2410", "Special/Upskill Training",  "Automatic Fare Collection", date(2024, 10, 7), date(2024, 10, 18)),
+        ("AF-IND-2502", "Induction Training",        "Automatic Fare Collection", date(2025, 2, 10), date(2025, 2, 27)),
+        ("AF-REF-2507", "Refresher Training",        "Automatic Fare Collection", date(2025, 7, 14), date(2025, 7, 29)),
+        ("AF-IND-2602", "Induction Training",        "Automatic Fare Collection", date(2026, 2, 17), date(2026, 3, 7)),
+        # Telecom
+        ("TC-IND-2403", "Induction Training",        "Telecom",                   date(2024, 3, 4),  date(2024, 3, 18)),
+        ("TC-REF-2407", "Refresher Training",        "Telecom",                   date(2024, 7, 1),  date(2024, 7, 15)),
+        ("TC-IND-2503", "Induction Training",        "Telecom",                   date(2025, 3, 3),  date(2025, 3, 20)),
+        ("TC-SKL-2508", "Special/Upskill Training",  "Telecom",                   date(2025, 8, 11), date(2025, 8, 22)),
+        ("TC-IND-2603", "Induction Training",        "Telecom",                   date(2026, 3, 2),  date(2026, 3, 19)),
+        # Operations
+        ("OP-IND-2402", "Induction Training",        "Operations",                date(2024, 2, 19), date(2024, 3, 5)),
+        ("OP-REF-2408", "Refresher Training",        "Operations",                date(2024, 8, 5),  date(2024, 8, 20)),
+        ("OP-IND-2504", "Induction Training",        "Operations",                date(2025, 4, 14), date(2025, 5, 2)),
+        ("OP-CON-2509", "Conversion Training",       "Operations",                date(2025, 9, 1),  date(2025, 9, 15)),
+        ("OP-IND-2601", "Induction Training",        "Operations",                date(2026, 1, 20), date(2026, 2, 10)),
+        # Rolling Stock
+        ("RS-IND-2403", "Induction Training",        "Rolling Stock",             date(2024, 3, 18), date(2024, 4, 2)),
+        ("RS-REF-2409", "Refresher Training",        "Rolling Stock",             date(2024, 9, 16), date(2024, 10, 1)),
+        ("RS-SKL-2412", "Special/Upskill Training",  "Rolling Stock",             date(2024, 12, 2), date(2024, 12, 14)),
+        ("RS-IND-2505", "Induction Training",        "Rolling Stock",             date(2025, 5, 5),  date(2025, 5, 22)),
+        ("RS-REF-2510", "Refresher Training",        "Rolling Stock",             date(2025, 10, 6), date(2025, 10, 21)),
+        ("RS-IND-2604", "Induction Training",        "Rolling Stock",             date(2026, 4, 1),  date(2026, 4, 18)),
+        # Electrical
+        ("EL-IND-2404", "Induction Training",        "Electrical (OHE)",          date(2024, 4, 22), date(2024, 5, 8)),
+        ("EL-REF-2410", "Refresher Training",        "Electrical (OHE)",          date(2024, 10, 21),date(2024, 11, 5)),
+        ("EL-IND-2506", "Induction Training",        "Electrical (OHE)",          date(2025, 6, 16), date(2025, 7, 3)),
+        ("EL-SKL-2511", "Special/Upskill Training",  "Electrical (OHE)",          date(2025, 11, 3), date(2025, 11, 14)),
+        ("EL-IND-2605", "Induction Training",        "Electrical (OHE)",          date(2026, 5, 4),  date(2026, 5, 22)),
+        # Civil
+        ("CV-IND-2405", "Induction Training",        "Civil",                     date(2024, 5, 13), date(2024, 5, 28)),
+        ("CV-REF-2411", "Refresher Training",        "Civil",                     date(2024, 11, 11),date(2024, 11, 25)),
+        ("CV-IND-2507", "Induction Training",        "Civil",                     date(2025, 7, 7),  date(2025, 7, 24)),
+        ("CV-IND-2602", "Induction Training",        "Civil",                     date(2026, 2, 24), date(2026, 3, 13)),
+        # OCC
+        ("OC-IND-2406", "Induction Training",        "OCC",                       date(2024, 6, 17), date(2024, 7, 2)),
+        ("OC-REF-2412", "Refresher Training",        "OCC",                       date(2024, 12, 9), date(2024, 12, 24)),
+        ("OC-IND-2508", "Induction Training",        "OCC",                       date(2025, 8, 18), date(2025, 9, 4)),
+        ("OC-IND-2603", "Induction Training",        "OCC",                       date(2026, 3, 16), date(2026, 4, 3)),
+        # Station Operations
+        ("SO-IND-2407", "Induction Training",        "Station Operations",        date(2024, 7, 29), date(2024, 8, 13)),
+        ("SO-REF-2501", "Refresher Training",        "Station Operations",        date(2025, 1, 27), date(2025, 2, 11)),
+        ("SO-IND-2509", "Induction Training",        "Station Operations",        date(2025, 9, 22), date(2025, 10, 9)),
+        ("SO-IND-2604", "Induction Training",        "Station Operations",        date(2026, 4, 14), date(2026, 5, 2)),
+        # Cross-dept
+        ("CMRL-SAF-2403","OJT (On-the-Job Training)","Operations",                date(2024, 3, 25), date(2024, 4, 6)),
+        ("CMRL-SAF-2503","OJT (On-the-Job Training)","Signalling",                date(2025, 3, 17), date(2025, 3, 29)),
+    ]
+
+
+def seed_batches(cur, batches):
+    print(f"\nSeeding {len(batches)} batches...")
+    inserted = 0
+    for code, course, dept, start, end in batches:
+        cur.execute("""
+            INSERT INTO "Batches" ("BatchCode", "CourseName", "StartDate", "EndDate", "Trainer", "Venue")
+            VALUES (%s, %s, %s, %s, %s, %s)
+            ON CONFLICT ("BatchCode") DO NOTHING
+        """, (code, course, start, end, "", "CMRL Training Centre, Chennai"))
+        if cur.rowcount:
+            inserted += 1
+    print(f"  Inserted {inserted} new batches (skipped duplicates)")
+
+
+# ─── CERTIFICATES ─────────────────────────────────────────────────────────────
+
+def seed_certificates(cur, emp_id_map, batch_id_map, dept_name_map):
+    """
+    emp_id_map:   {employee_code: (db_id, dept_name)}
+    batch_id_map: {batch_code: (db_id, dept_name, end_date)}
+    dept_name_map: {employee_code: dept_name}  — to look up competency area
+    """
+
+    # Build dept → sorted list of (end_date, batch_code) for picking batches
+    dept_batches = {}
+    for code, (bid, dept, end_date) in batch_id_map.items():
+        dept_batches.setdefault(dept, []).append((end_date, code))
+    for dept in dept_batches:
+        dept_batches[dept].sort()
+
+    def pick_batch_id(dept, issue_date):
+        candidates = [(ed, bc) for ed, bc in dept_batches.get(dept, []) if ed <= issue_date]
+        batch_code = candidates[-1][1] if candidates else dept_batches.get(dept, [(None, None)])[0][1]
+        if batch_code is None:
+            # absolute fallback: any batch
+            any_code = next(iter(batch_id_map))
+            return batch_id_map[any_code][0]
+        return batch_id_map[batch_code][0]
+
+    cert_counters = {}
+
+    def next_cert_no(dept, year):
+        prefix = DEPT_CERT_PREFIX.get(dept, "GENL")
+        yr = str(year)[2:]
+        key = f"{prefix}{yr}"
+        cert_counters[key] = cert_counters.get(key, 0) + 1
+        return f"{key}{cert_counters[key]:03d}"
+
+    # (employee_code, issue_date, status)
+    cert_scenarios = [
+        ("0300", date(2024, 3, 20), "Active"),
+        ("0301", date(2024, 4, 5),  "Active"),
+        ("0302", date(2024, 4, 18), "Active"),
+        ("0303", date(2024, 5, 2),  "Active"),
+        ("0304", date(2024, 5, 15), "Active"),
+        ("0305", date(2024, 6, 3),  "Active"),
+        ("0306", date(2024, 6, 17), "Active"),
+        ("0307", date(2024, 7, 1),  "Active"),
+        ("0308", date(2024, 7, 22), "Active"),
+        ("0309", date(2024, 8, 5),  "Active"),
+        ("0310", date(2024, 8, 19), "Active"),
+        ("0311", date(2024, 9, 2),  "Active"),
+        ("0312", date(2024, 9, 16), "Active"),
+        ("0313", date(2024, 10, 7), "Active"),
+        ("0314", date(2024, 10, 21),"Active"),
+        ("0315", date(2024, 11, 4), "Active"),
+        ("0316", date(2024, 11, 18),"Active"),
+        ("0317", date(2024, 12, 2), "Active"),
+        ("0318", date(2024, 12, 16),"Active"),
+        ("0319", date(2025, 1, 8),  "Active"),
+        ("0320", date(2025, 1, 22), "Active"),
+        ("0321", date(2025, 2, 5),  "Active"),
+        ("0322", date(2025, 2, 19), "Active"),
+        ("0323", date(2025, 3, 5),  "Active"),
+        ("0324", date(2025, 3, 19), "Active"),
+        ("0325", date(2025, 4, 2),  "Active"),
+        ("0326", date(2025, 4, 16), "Active"),
+        ("0327", date(2025, 5, 7),  "Active"),
+        ("0328", date(2025, 5, 21), "Active"),
+        ("0329", date(2025, 6, 4),  "Active"),
+        ("0330", date(2025, 6, 18), "Active"),
+        ("0331", date(2025, 7, 2),  "Active"),
+        ("0332", date(2025, 7, 16), "Active"),
+        ("0333", date(2025, 7, 30), "Active"),
+        ("0334", date(2025, 8, 13), "Active"),
+        ("0335", date(2025, 8, 27), "Active"),
+        ("0336", date(2025, 9, 10), "Active"),
+        ("0337", date(2025, 9, 24), "Active"),
+        ("0338", date(2025, 10, 8), "Active"),
+        ("0339", date(2025, 10, 22),"Active"),
+        ("0340", date(2025, 11, 5), "Active"),
+        ("0341", date(2025, 11, 19),"Active"),
+        ("0342", date(2025, 12, 3), "Active"),
+        ("0343", date(2025, 12, 17),"Active"),
+        ("0344", date(2026, 1, 7),  "Active"),
+        ("0345", date(2026, 1, 21), "Active"),
+        ("0346", date(2026, 2, 4),  "Active"),
+        ("0347", date(2026, 2, 18), "Active"),
+        ("0348", date(2026, 3, 4),  "Active"),
+        ("0349", date(2026, 3, 18), "Active"),
+        ("0350", date(2026, 4, 1),  "Active"),
+        ("0351", date(2026, 4, 15), "Active"),
+        ("0352", date(2026, 5, 6),  "Active"),
+        ("0353", date(2026, 5, 20), "Active"),
+    ]
+
+    print(f"\nSeeding certificates...")
+    inserted = 0
+    skipped = 0
+
+    for emp_code, issue_date, status in cert_scenarios:
+        if emp_code not in emp_id_map:
+            print(f"  SKIP cert for {emp_code}: employee not in DB")
+            skipped += 1
+            continue
+
+        emp_db_id, dept = emp_id_map[emp_code]
+        areas = DEPT_AREAS.get(dept, ["General Competency"])
+        area = areas[int(emp_code) % len(areas)]
+
+        cert_no = next_cert_no(dept, issue_date.year)
+        expiry  = issue_date.replace(year=issue_date.year + 3) - timedelta(days=1)
+        batch_db_id = pick_batch_id(dept, issue_date)
+
+        cur.execute("""
+            INSERT INTO "Certificates"
+                ("CertificateNumber", "EmployeeId", "BatchId",
+                 "IssueDate", "ExpiryDate", "Status", "CompetencyArea")
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT ("CertificateNumber") DO NOTHING
+        """, (cert_no, emp_db_id, batch_db_id, issue_date, expiry, status, area))
+
+        if cur.rowcount:
+            inserted += 1
+
+    print(f"  Inserted {inserted} new certificates ({skipped} skipped)")
+
+
+# ─── MAIN ─────────────────────────────────────────────────────────────────────
 
 def seed():
-    batches           = parse_batches()
-    employees, certs  = parse_employees_and_certs()
-
     conn = psycopg2.connect(**DB)
     cur  = conn.cursor()
 
-    # ── Employees ────────────────────────────────────────────────────────────
-    print(f"Inserting {len(employees)} employees...")
-    execute_values(cur, """
-        INSERT INTO "Employees" ("EmployeeCode", "Name", "Designation", "Department")
-        VALUES %s
-        ON CONFLICT DO NOTHING
-    """, [(e["employee_code"], e["name"], e["designation"], e["department"])
-          for e in employees])
+    try:
+        # 1. Master tables first — everything else depends on their IDs
+        dept_id_map       = seed_departments(cur);  conn.commit()
+        desig_id_map      = seed_designations(cur); conn.commit()
+        contractor_id_map = seed_contractors(cur);  conn.commit()
 
-    # ── Batches ──────────────────────────────────────────────────────────────
-    print(f"Inserting {len(batches)} batches...")
-    execute_values(cur, """
-        INSERT INTO "Batches" ("BatchCode", "CourseName", "StartDate", "EndDate", "Trainer", "Venue")
-        VALUES %s
-        ON CONFLICT DO NOTHING
-    """, [(b["batch_code"], b["course_name"], b["start_date"],
-           b["end_date"],   b["trainer"],     b["venue"])
-          for b in batches])
+        # 2. Employees — need dept/desig/contractor IDs
+        employees = make_employees()
+        seed_employees(cur, employees, dept_id_map, desig_id_map, contractor_id_map)
+        conn.commit()
 
-    # ── Build lookup maps (after insert) ─────────────────────────────────────
-    cur.execute("""SELECT "EmployeeCode", "Id" FROM "Employees" """)
-    emp_id_map = {row[0]: row[1] for row in cur.fetchall()}
+        # 3. Batches — independent of employees
+        batches = make_batches()
+        seed_batches(cur, batches)
+        conn.commit()
 
-    # Map cert → batch via the Batch Report's batch_code list
-    # The Active Certs sheet doesn't have batch info, so we derive it:
-    # cert prefix encodes department/type. Use first matching batch by dept.
-    cur.execute("""SELECT "BatchCode", "Id", "CourseName" FROM "Batches" """)
-    batch_rows = cur.fetchall()
-    batch_id_map = {r[0]: r[1] for r in batch_rows}
+        # 4. Build lookup maps for certificates
+        cur.execute("""
+            SELECT e."EmployeeCode", e."Id", d."Name"
+            FROM "Employees" e
+            JOIN "Departments" d ON d."Id" = e."DepartmentId"
+        """)
+        emp_id_map = {row[0]: (row[1], row[2]) for row in cur.fetchall()}
 
-    # Dept → BatchCode heuristic mapping from the Batch Report data
-    dept_to_batch = {}
-    for b in batches:
-        dept_to_batch.setdefault(b["department"], b["batch_code"])
+        cur.execute("""
+            SELECT "BatchCode", "Id", "CourseName", "EndDate"
+            FROM "Batches"
+        """)
+        # batch_id_map: {batch_code: (db_id, course_name, end_date)}
+        # We need dept per batch — derive from code prefix
+        raw_batches = cur.fetchall()
 
-    # ── Certificates ─────────────────────────────────────────────────────────
-    print(f"Inserting {len(certs)} certificates...")
-    cert_rows = []
-    for c in certs:
-        emp_id = emp_id_map.get(c["employee_code"])
-        if emp_id is None:
-            print(f"  WARN: no employee found for code {c['employee_code']!r}, skipping cert {c['certificate_number']}")
-            continue
+        # Rebuild dept from the make_batches list
+        batch_dept_lookup = {code: dept for code, _, dept, _, _ in batches}
+        batch_id_map = {}
+        for code, bid, course, end_date in raw_batches:
+            dept = batch_dept_lookup.get(code, "Operations")
+            batch_id_map[code] = (bid, dept, end_date)
 
-        # Derive batch from competency area / employee dept
-        emp = next((e for e in employees if e["employee_code"] == c["employee_code"]), None)
-        dept = emp["department"] if emp else ""
-        batch_code = dept_to_batch.get(dept, batches[0]["batch_code"] if batches else None)
-        batch_id   = batch_id_map.get(batch_code) if batch_code else None
+        # 5. Certificates
+        seed_certificates(cur, emp_id_map, batch_id_map, {})
+        conn.commit()
 
-        if batch_id is None:
-            print(f"  WARN: no batch found for dept {dept!r}, skipping cert {c['certificate_number']}")
-            continue
+    except Exception as e:
+        conn.rollback()
+        print(f"\nFATAL: {e}")
+        raise
+    finally:
+        # Summary
+        cur.execute('SELECT COUNT(*) FROM "Departments"');  d = cur.fetchone()[0]
+        cur.execute('SELECT COUNT(*) FROM "Designations"'); ds = cur.fetchone()[0]
+        cur.execute('SELECT COUNT(*) FROM "Contractors"');  co = cur.fetchone()[0]
+        cur.execute('SELECT COUNT(*) FROM "Employees"');    e = cur.fetchone()[0]
+        cur.execute('SELECT COUNT(*) FROM "Batches"');      b = cur.fetchone()[0]
+        cur.execute('SELECT COUNT(*) FROM "Certificates"'); c = cur.fetchone()[0]
 
-        cert_rows.append((
-            c["certificate_number"],
-            emp_id,
-            batch_id,
-            c["issue_date"],
-            c["expiry_date"],
-            c["status"],
-            c["competency_area"],
-        ))
-
-    execute_values(cur, """
-        INSERT INTO "Certificates"
-            ("CertificateNumber", "EmployeeId", "BatchId",
-             "IssueDate", "ExpiryDate", "Status", "CompetencyArea")
-        VALUES %s
-        ON CONFLICT DO NOTHING
-    """, cert_rows)
-
-    conn.commit()
-    cur.close()
-    conn.close()
-    print("Done. All data seeded successfully.")
+        print(f"""
+─────────────────────────────────────────
+ DATABASE TOTALS AFTER SEEDING
+─────────────────────────────────────────
+ Departments  : {d}
+ Designations : {ds}
+ Contractors  : {co}
+ Employees    : {e}
+ Batches      : {b}
+ Certificates : {c}
+─────────────────────────────────────────
+""")
+        cur.close()
+        conn.close()
 
 
 if __name__ == "__main__":

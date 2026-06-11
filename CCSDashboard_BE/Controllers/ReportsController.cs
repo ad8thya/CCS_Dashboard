@@ -134,6 +134,8 @@ public async Task<IActionResult> GetSummary()
         ExpiredCertificates = await _context.Certificates
                                 .CountAsync(c => c.ExpiryDate < today),
         TotalBatches        = await _context.Batches.CountAsync(),
+        BatchesInProgress = await _context.Batches
+    .CountAsync(b => b.EndDate >= today && b.StartDate <= today),
     };
 
     return Ok(summary);

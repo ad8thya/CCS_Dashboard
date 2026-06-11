@@ -57,7 +57,7 @@
 }
 
 .metric-cell {
-  padding: 14px 16px;
+  padding: 10px 14px;
   border-right: 1px solid #f1f5f9;
   position: relative;
 }
@@ -73,7 +73,7 @@
 }
 
 .metric-value {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 800;
   line-height: 1;
   color: #0f172a;
@@ -81,7 +81,7 @@
 }
 
 .metric-label {
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   color: #94a3b8;
   font-weight: 600;
   text-transform: uppercase;
@@ -100,10 +100,10 @@
   background: #fff;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
-  padding: 14px 16px;
+  padding: 22px 20px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   position: relative;
   overflow: hidden;
 }
@@ -139,7 +139,7 @@
 }
 
 .master-label {
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   color: #94a3b8;
   font-weight: 600;
   text-transform: uppercase;
